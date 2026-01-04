@@ -1,3 +1,4 @@
+// Unit Tests for Landing Page
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Landing from '@/pages/Landing';
