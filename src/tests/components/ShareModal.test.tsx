@@ -1,3 +1,4 @@
+// Usability and Accessibility Tests for ShareModal
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ShareModal from '@/components/ShareModal';
