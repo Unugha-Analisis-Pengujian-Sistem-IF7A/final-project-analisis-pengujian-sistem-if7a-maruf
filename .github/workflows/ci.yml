@@ -1,0 +1,51 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build, Test & Analyze
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Linter
+        run: npm run lint
+        continue-on-error: true # Allow build to proceed even if lint warnings exist
+
+      - name: Run Unit Tests
+        run: npm test -- --run
+
+      - name: Build Project
+        run: npm run build
+
+      # SonarQube Configuration
+      # Note: Since SonarQube is running locally (localhost:9000), this step is configured
+      # but commented out. To make this work in GitHub Actions:
+      # 1. Your SonarQube server must be accessible publicly (or use SonarCloud)
+      # 2. Add SONAR_TOKEN and SONAR_HOST_URL to GitHub Repository Secrets
+
+      # - name: SonarQube Scan
+      #   uses: sonarsource/sonarqube-scan-action@master
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
