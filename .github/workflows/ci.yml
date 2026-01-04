@@ -34,9 +34,15 @@ jobs:
 
       - name: Run Unit Tests
         run: npm test -- --run
+        env:
+          VITE_SUPABASE_URL: "https://placeholder-url.supabase.co"
+          VITE_SUPABASE_ANON_KEY: "placeholder-key"
 
       - name: Build Project
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: "https://placeholder-url.supabase.co"
+          VITE_SUPABASE_ANON_KEY: "placeholder-key"
 
       # SonarQube Configuration
       # Note: Since SonarQube is running locally (localhost:9000), this step is configured
