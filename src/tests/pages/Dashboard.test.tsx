@@ -1,4 +1,5 @@
 
+// Unit Tests for Dashboard Page
 import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Dashboard from '@/pages/Dashboard';
