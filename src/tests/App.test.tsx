@@ -93,7 +93,7 @@ describe('App Integration', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        window.history.pushState({}, 'Test', '/');
+        window.location.hash = '#/';
         
         // Setup Supabase Mock
         const mockChain = createChainableMock();
@@ -131,7 +131,7 @@ describe('App Integration', () => {
 
     it('renders login page on /login', async () => {
         setupAuth();
-        window.history.pushState({}, 'Test', '/login');
+        window.location.hash = '#/login';
         await act(async () => {
             render(<App />);
         });
@@ -140,7 +140,7 @@ describe('App Integration', () => {
 
     it('renders discover page on /discover', async () => {
          setupAuth();
-         window.history.pushState({}, 'Test', '/discover');
+         window.location.hash = '#/discover';
          await act(async () => {
              render(<App />);
          });
@@ -149,7 +149,7 @@ describe('App Integration', () => {
 
     it('renders dashboard page when logged in and navigating to /dashboard', async () => {
          setupAuth({ user: { id: '123', email: 'test@example.com' } });
-         window.history.pushState({}, 'Test', '/dashboard');
+         window.location.hash = '#/dashboard';
 
          await act(async () => {
              render(<App />);
@@ -162,7 +162,7 @@ describe('App Integration', () => {
 
     it('switches to dashboard layout when logged in user visits public page (not landing)', async () => {
         setupAuth({ user: { id: '123', email: 'test@example.com' } });
-        window.history.pushState({}, 'Test', '/discover');
+        window.location.hash = '#/discover';
 
         await act(async () => {
             render(<App />);
@@ -176,7 +176,7 @@ describe('App Integration', () => {
         setupAuth({ 
             user: { id: '123', email: 'user@test.com', user_metadata: { full_name: 'Test User' } } 
         });
-        window.history.pushState({}, 'Test', '/dashboard');
+        window.location.hash = '#/dashboard';
 
         await act(async () => {
             render(<App />);
@@ -212,7 +212,7 @@ describe('App Integration', () => {
         mockLimit.mockResolvedValue({ data: mockNotifs, error: null });
 
         setupAuth({ user: { id: '123', email: 'user@test.com' } });
-        window.history.pushState({}, 'Test', '/dashboard');
+        window.location.hash = '#/dashboard';
 
         await act(async () => {
              render(<App />);
@@ -281,7 +281,7 @@ describe('App Integration', () => {
         ];
         mockLimit.mockResolvedValue({ data: mockNotifs, error: null });
         setupAuth({ user: { id: '123' } });
-        window.history.pushState({}, 'Test', '/dashboard');
+        window.location.hash = '#/dashboard';
         
         await act(async () => { render(<App />); });
         await act(async () => { fireEvent.click(screen.getByTestId('notif-btn')); });
@@ -290,13 +290,13 @@ describe('App Integration', () => {
         fireEvent.click(notifItem);
         
         await waitFor(() => {
-            expect(window.location.pathname).toBe('/discover');
+            expect(window.location.hash).toBe('#/discover');
         });
     });
 
     it('closes menus when clicking outside', async () => {
         setupAuth({ user: { id: '123', user_metadata: { full_name: 'Outside User' } } });
-        window.history.pushState({}, 'Test', '/dashboard');
+        window.location.hash = '#/dashboard';
         await act(async () => { render(<App />); });
         
         // Open User Menu
@@ -326,7 +326,7 @@ describe('App Integration', () => {
         const mockNotificationInstance = {
             close: vi.fn(),
             onclick: null as any
-        }; // eslint-disable-line @typescript-eslint/no-explicit-any
+        };  
 
         const mockNotificationCtor = vi.fn().mockImplementation(function () {
             return mockNotificationInstance;
@@ -334,7 +334,7 @@ describe('App Integration', () => {
         vi.stubGlobal('Notification', mockNotificationCtor);
         (mockNotificationCtor as any).permission = 'granted';
 
-        window.history.pushState({}, 'Test', '/dashboard');
+        window.location.hash = '#/dashboard';
         await act(async () => { render(<App />); });
         
         // Wait for it to subscribe and set callback
