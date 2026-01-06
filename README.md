@@ -58,7 +58,7 @@ Proyek ini mengimplementasikan strategi pengujian berlapis untuk memastikan stab
 
 - Menggunakan **Vitest** dan **React Testing Library**.
 - Mencakup pengujian komponen UI, hooks, dan utilitas logic.
-- **Total Tests**: `> 160 Passed`.
+- **Total Tests**: `184 Passed`.
 
 ### 2. Integration Testing
 
