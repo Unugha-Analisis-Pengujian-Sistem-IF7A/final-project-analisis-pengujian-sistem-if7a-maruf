@@ -55,13 +55,27 @@ Proyek ini mengimplementasikan strategi pengujian berlapis untuk memastikan stab
 - **Total Tests**: `> 160 Passed`.
 
 ### 2. Integration Testing
+
 - Pengujian alur kerja antar komponen (misal: Alur Login hingga masuk Dashboard).
 - Pengujian integrasi layanan pihak ketiga (Supabase Mocking).
+
+#### 🧪 Unit & Integration Test Result:
+
+<p align="center">
+  <img src="images/unit-test-report.png" alt="Unit Test Analysis Result" style="border-radius: 10px; border: 1px solid #e2e8f0; width: 100%;" />
+</p>
+
 
 ### 3. Static Code Analysis
 
 - **SonarQube**: Digunakan untuk navigasi technical debt, mendeteksi code smells, dan kerentanan keamanan.
 - **ESLint**: Penegakan standar penulisan kode TypeScript yang ketat.
+
+#### 🔍 Lint Analysis Result (ESLint):
+
+<p align="center">
+  <img src="images/lint-report.png" alt="Lint Analysis Result" style="border-radius: 10px; border: 1px solid #e2e8f0; width: 100%;" />
+</p>
 
 #### 📊 SonarQube Analysis Result:
 
