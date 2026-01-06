@@ -56,8 +56,10 @@ Proyek ini mengimplementasikan strategi pengujian berlapis untuk memastikan stab
 
 ### 2. Integration Testing
 
-- Pengujian alur kerja antar komponen (misal: Alur Login hingga masuk Dashboard).
-- Pengujian integrasi layanan pihak ketiga (Supabase Mocking).
+- **Authentication Flow**: Pengujian alur Login hingga masuk ke Dashboard.
+- **Event Workflow**: Pengujian alur pembuatan event oleh Organizer hingga muncul di daftar kelola.
+- **Registration Flow**: Pengujian alur pendaftaran peserta ke sebuah event hingga tiket terbit.
+- **Database Integration**: Simulasi interaksi layanan Supabase menggunakan Mocking untuk menjamin integritas data tanpa menyentuh database produksi.
 
 #### 🧪 Unit & Integration Test Result:
 
