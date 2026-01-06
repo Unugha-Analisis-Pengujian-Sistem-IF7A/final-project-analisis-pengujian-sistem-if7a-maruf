@@ -1,11 +1,11 @@
 
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { supabase } from '@/services/supabaseClient';
 import EventDetail from '@/pages/EventDetail';
-import ParticipantDashboard from '@/pages/dashboard/ParticipantDashboard';
+import { ParticipantDashboard } from '@/pages/dashboard/ParticipantDashboard';
 
 // --- Mocks ---
 vi.mock('@/services/supabaseClient', () => ({
@@ -49,27 +49,27 @@ describe('Integration Test: Registration Flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(supabase.auth.getSession).mockResolvedValue({ 
-        data: { session: { user: mockUser } }, 
+        data: { session: { user: mockUser } as any }, 
         error: null 
     } as any);
   });
 
   it('allows a participant to register for an event via EventDetail', async () => {
     // Mock user role fetch and event fetch
-    vi.mocked(supabase.from).mockImplementation((table: string) => {
+    vi.mocked(supabase.from).mockImplementation((table: string): any => {
         if (table === 'profiles') {
             return {
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
                 single: vi.fn().mockReturnValue(Promise.resolve({ data: { role: 'participant' }, error: null })),
-            } as any;
+            };
         }
         if (table === 'events') {
             return {
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
                 single: vi.fn().mockReturnValue(Promise.resolve({ data: mockEvent, error: null })),
-            } as any;
+            };
         }
         if (table === 'registrations') {
              return {
@@ -78,13 +78,13 @@ describe('Integration Test: Registration Flow', () => {
                 then: vi.fn((cb) => Promise.resolve({ data: [], error: null }).then(cb)),
                 insert: vi.fn().mockReturnValue(Promise.resolve({ data: null, error: null })),
                 single: vi.fn().mockReturnValue(Promise.resolve({ data: null, error: null })),
-            } as any;
+            };
         }
         return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             then: vi.fn((cb) => Promise.resolve({ data: [], error: null }).then(cb)),
-        } as any;
+        };
     });
 
     await act(async () => {

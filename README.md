@@ -1,4 +1,5 @@
 # ✨ UNUGHA Event Platform
+
 <p align="center">
   <img src="images/gambar.jpg" alt="UNUGHA Event Platform" style="border-radius: 20px; box-shadow: 0px 4px 20px rgba(0,0,0,0.1); width: 800px;" />
 </p>
@@ -23,13 +24,15 @@
 ---
 
 ## 📚 Overview
+
 **UNUGHA Event Platform** adalah platform manajemen acara kampus modern yang dirancang untuk menyederhanakan kolaborasi antar mahasiswa dan organisasi di lingkungan Universitas Nahdlatul Ulama Al Ghazali. Proyek ini dikembangkan sebagai tugas akhir mata kuliah **Analisis & Pengujian Sistem (IF7A)**, dengan fokus utama pada kualitas kode, keandalan fungsional, dan pengujian sistem yang komprehensif.
 
 ---
 
 ## 👥 Tim Pengembang
+
 | Role | Nama | NIM |
-|-------|------|-----|
+| :--- | :--- | :--- |
 | **Project Leader** | **Ma’ruf Muchlisin** | 22EO10013 |
 | **QA Engineer** | Akmal Ubaidillah | 22EO10013 |
 | **Fullstack Dev** | Eko Patrio | 22EO10013 |
@@ -37,6 +40,7 @@
 ---
 
 ## 🚀 Fitur Utama
+
 - **🔐 Secure Authentication**: Sistem login & registrasi terintegrasi dengan Supabase Auth.
 - **📅 Interactive Calendar**: Visualisasi jadwal event kampus yang dinamis.
 - **🛠 Event Management**: Full CRUD (Create, Read, Update, Delete) untuk pengelolaan event.
@@ -47,9 +51,11 @@
 ---
 
 ## 🧪 Quality Assurance & Testing
+
 Proyek ini mengimplementasikan strategi pengujian berlapis untuk memastikan stabilitas sistem:
 
 ### 1. Unit Testing
+
 - Menggunakan **Vitest** dan **React Testing Library**.
 - Mencakup pengujian komponen UI, hooks, dan utilitas logic.
 - **Total Tests**: `> 160 Passed`.
@@ -61,42 +67,43 @@ Proyek ini mengimplementasikan strategi pengujian berlapis untuk memastikan stab
 - **Registration Flow**: Pengujian alur pendaftaran peserta ke sebuah event hingga tiket terbit.
 - **Database Integration**: Simulasi interaksi layanan Supabase menggunakan Mocking untuk menjamin integritas data tanpa menyentuh database produksi.
 
-#### 🧪 Unit & Integration Test Result:
+#### 🧪 Unit & Integration Test Result
 
 <p align="center">
   <img src="images/unit-test-report.png" alt="Unit Test Analysis Result" style="border-radius: 10px; border: 1px solid #e2e8f0; width: 100%;" />
 </p>
 
-#### 📊 Test Coverage Report:
+#### 📊 Test Coverage Report
 
 <p align="center">
   <img src="images/coverage-report.png" alt="Test Coverage Report" style="border-radius: 10px; border: 1px solid #e2e8f0; width: 100%;" />
 </p>
-
 
 ### 3. Static Code Analysis
 
 - **SonarQube**: Digunakan untuk navigasi technical debt, mendeteksi code smells, dan kerentanan keamanan.
 - **ESLint**: Penegakan standar penulisan kode TypeScript yang ketat.
 
-#### 🔍 Lint Analysis Result (ESLint):
+#### 🔍 Lint Analysis Result (ESLint)
 
 <p align="center">
   <img src="images/lint-report.png" alt="Lint Analysis Result" style="border-radius: 10px; border: 1px solid #e2e8f0; width: 100%;" />
 </p>
 
-#### 📊 SonarQube Analysis Result:
+#### 📊 SonarQube Analysis Result
 
 <p align="center">
   <img src="images/sonarqube-report.png" alt="SonarQube Analysis Result" style="border-radius: 10px; border: 1px solid #e2e8f0; width: 100%;" />
 </p>
 
 ### 4. CI/CD Pipeline
+
 - **GitHub Actions**: Setiap push ke branch `main` akan memicu pipeline otomatis yang melakukan instalasi deps, linting, dan menjalankan seluruh suite pengujian.
 
 ---
 
 ## 🛠 Tech Stack
+
 - **Frontend**: React 19 (Vite), Tailwind CSS, Lucide Icons.
 - **Backend & Database**: Supabase (PostgreSQL), Supabase Storage.
 - **Testing**: Vitest, React Testing Library.
@@ -105,6 +112,7 @@ Proyek ini mengimplementasikan strategi pengujian berlapis untuk memastikan stab
 ---
 
 ## 🏁 Cara Menjalankan
+
 1. Clone repositori ini.
 2. Install dependensi: `npm install`.
 3. Jalankan development server: `npm run dev`.

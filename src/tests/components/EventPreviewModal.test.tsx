@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import EventPreviewModal from '@/components/EventPreviewModal';
 import { MemoryRouter } from 'react-router-dom';
@@ -207,18 +207,17 @@ describe('EventPreviewModal', () => {
             </MemoryRouter>
         );
 
-        // Prepare section is open by default when user is logged in
-        // So we don't need to click it, clicking it would close it.
-        
-        // Use testId for toggles
+        // Wait for the prepare section to be open (due to setTimeout in component)
+        // Or explicitly open it if it's not open
         const emailToggle = await screen.findByTestId('email-toggle');
+        
         await act(async () => {
             fireEvent.click(emailToggle);
         });
         
-        // The toast shows "Notifikasi Aktif" and "Pengingat dijadwalkan ke..."
+        // Use findByText to wait for the toast
         expect(await screen.findByText(/Notifikasi Aktif/i)).toBeInTheDocument();
-        expect(screen.getByText(/Pengingat dijadwalkan ke test@test.com/i)).toBeInTheDocument();
+        expect(await screen.findByText(/Pengingat dijadwalkan ke test@test.com/i)).toBeInTheDocument();
 
         // WhatsApp toggle
         const waToggle = screen.getByTestId('wa-toggle');
@@ -226,7 +225,7 @@ describe('EventPreviewModal', () => {
             fireEvent.click(waToggle);
         });
         
-        expect(screen.getByText(/Notifikasi WhatsApp aktif ke nomor terdaftar/i)).toBeInTheDocument();
+        expect(await screen.findByText(/Notifikasi WhatsApp aktif ke nomor terdaftar/i)).toBeInTheDocument();
     });
 
     it('toggles the prepare section visibility', async () => {

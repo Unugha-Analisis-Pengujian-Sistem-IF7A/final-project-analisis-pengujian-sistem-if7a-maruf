@@ -54,18 +54,18 @@ describe('Integration Test: Event Workflow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(supabase.auth.getSession).mockResolvedValue({ 
-        data: { session: { user: mockUser } }, 
+        data: { session: { user: mockUser } as any }, 
         error: null 
     } as any);
     
     // Mock user role fetch
-    vi.mocked(supabase.from).mockImplementation((table: string) => {
+    vi.mocked(supabase.from).mockImplementation((table: string): any => {
         if (table === 'profiles') {
             return {
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
                 single: vi.fn().mockReturnValue(Promise.resolve({ data: { role: 'organizer' }, error: null })),
-            } as any;
+            };
         }
         return {
             select: vi.fn().mockReturnThis(),
@@ -73,7 +73,7 @@ describe('Integration Test: Event Workflow', () => {
             insert: vi.fn().mockReturnValue(Promise.resolve({ data: null, error: null })),
             order: vi.fn().mockReturnThis(),
             then: vi.fn((cb) => Promise.resolve({ data: [], error: null }).then(cb)),
-        } as any;
+        };
     });
   });
 
@@ -117,18 +117,18 @@ describe('Integration Test: Event Workflow', () => {
     const submitBtn = screen.getByText('Buat Acara');
     
     // Mock successful insert
-    vi.mocked(supabase.from).mockImplementation((table: string) => {
+    vi.mocked(supabase.from).mockImplementation((table: string): any => {
         if (table === 'events') {
             return {
                 insert: vi.fn().mockReturnValue(Promise.resolve({ data: null, error: null })),
-            } as any;
+            };
         }
         return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockReturnValue(Promise.resolve({ data: { role: 'organizer' }, error: null })),
             then: vi.fn((cb) => Promise.resolve({ data: [], error: null }).then(cb)),
-        } as any;
+        };
     });
 
     await act(async () => {
