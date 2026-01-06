@@ -65,6 +65,12 @@ Proyek ini mengimplementasikan strategi pengujian berlapis untuk memastikan stab
   <img src="images/unit-test-report.png" alt="Unit Test Analysis Result" style="border-radius: 10px; border: 1px solid #e2e8f0; width: 100%;" />
 </p>
 
+#### 📊 Test Coverage Report:
+
+<p align="center">
+  <img src="images/coverage-report.png" alt="Test Coverage Report" style="border-radius: 10px; border: 1px solid #e2e8f0; width: 100%;" />
+</p>
+
 
 ### 3. Static Code Analysis
 
