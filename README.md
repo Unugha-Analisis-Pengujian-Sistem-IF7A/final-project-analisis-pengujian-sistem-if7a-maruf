@@ -59,8 +59,15 @@ Proyek ini mengimplementasikan strategi pengujian berlapis untuk memastikan stab
 - Pengujian integrasi layanan pihak ketiga (Supabase Mocking).
 
 ### 3. Static Code Analysis
+
 - **SonarQube**: Digunakan untuk navigasi technical debt, mendeteksi code smells, dan kerentanan keamanan.
 - **ESLint**: Penegakan standar penulisan kode TypeScript yang ketat.
+
+#### 📊 SonarQube Analysis Result:
+
+<p align="center">
+  <img src="images/sonarqube-report.png" alt="SonarQube Analysis Result" style="border-radius: 10px; border: 1px solid #e2e8f0; width: 100%;" />
+</p>
 
 ### 4. CI/CD Pipeline
 - **GitHub Actions**: Setiap push ke branch `main` akan memicu pipeline otomatis yang melakukan instalasi deps, linting, dan menjalankan seluruh suite pengujian.
