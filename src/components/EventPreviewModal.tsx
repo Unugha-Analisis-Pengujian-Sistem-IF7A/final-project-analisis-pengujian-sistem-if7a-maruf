@@ -58,7 +58,8 @@ const EventPreviewModal: React.FC<EventPreviewModalProps> = ({ isOpen, onClose, 
   if (!isOpen || !event) return null;
 
   const handleCopyLink = () => {
-    const url = `${window.location.origin}/#/event/${event.id}`;
+    const baseUrl = import.meta.env.BASE_URL;
+    const url = `${window.location.origin}${baseUrl}event/${event.id}`;
     navigator.clipboard.writeText(url);
     const btn = document.getElementById('btn-copy');
     if(btn) btn.innerHTML = 'Disalin!';
@@ -174,7 +175,8 @@ const EventPreviewModal: React.FC<EventPreviewModalProps> = ({ isOpen, onClose, 
                    event.location?.toLowerCase().includes('meet');
                    
   const imageUrl = getStorageUrl(event.image_url) || 'https://via.placeholder.com/800x800?text=Event';
-  const eventUrl = `${window.location.origin}/#/event/${event.id}`;
+  const baseUrl = import.meta.env.BASE_URL;
+  const eventUrl = `${window.location.origin}${baseUrl}event/${event.id}`;
 
   return (
     <>
