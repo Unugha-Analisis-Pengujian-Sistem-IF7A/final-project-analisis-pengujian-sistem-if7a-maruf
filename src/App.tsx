@@ -6,8 +6,6 @@ import {
   Bell, 
   Search, 
   LogOut,
-  Menu,
-  X,
   User as UserIcon,
   Settings,
   ChevronDown,
@@ -17,10 +15,8 @@ import {
   AlertTriangle,
   Globe,
   LayoutDashboard,
-  Calendar,
-  Users
+  Calendar
 } from 'lucide-react';
-import { Button } from './components/UI';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { supabase } from './services/supabaseClient';
@@ -63,14 +59,7 @@ const TimeDisplay = () => {
 // --- Navigation Components ---
 
 export const PublicNavbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
-  };
+  const { user } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/80 backdrop-blur-xl border-b border-transparent">
@@ -85,79 +74,44 @@ export const PublicNavbar = () => {
         </Link>
 
         {/* Right: Actions (Luma Style) */}
-        <div className="flex items-center gap-4 sm:gap-6">
+        <div className="flex items-center gap-2 sm:gap-6">
             
             {/* Time Display */}
             <TimeDisplay />
 
-            {/* Explore Link */}
+            {/* Explore Link - Responsive Icon/Text */}
             <Link 
                 to="/discover" 
-                className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+                className="flex items-center gap-1.5 p-2 text-slate-500 hover:text-slate-900 transition-colors"
+                title="Jelajahi Acara"
             >
-                Jelajahi Acara 
-                <ArrowUpRight size={16} className="text-slate-400" />
+                <Globe size={20} className="sm:hidden" />
+                <span className="hidden sm:inline text-sm font-medium">Jelajahi Acara</span>
+                <ArrowUpRight size={16} className="text-slate-400 hidden sm:block" />
             </Link>
 
-            {/* Login/Dashboard Button */}
+            {/* Login/Dashboard Button - Responsive Icon/Button */}
             {user ? (
-                <div className="flex items-center gap-3">
-                    <Link to="/dashboard">
-                       <button className="px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-semibold transition-colors">
-                           Dashboard
-                       </button>
-                    </Link>
-                </div>
+                <Link to="/dashboard" title="Dashboard">
+                    <button className="px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-semibold transition-colors hidden sm:block">
+                        Dashboard
+                    </button>
+                    <div className="p-2 bg-slate-100 rounded-full sm:hidden text-slate-900">
+                        <LayoutDashboard size={20} />
+                    </div>
+                </Link>
             ) : (
-                <Link to="/login">
-                    <button className="px-6 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-semibold transition-all hover:scale-105 active:scale-95">
+                <Link to="/login" title="Masuk">
+                    <button className="px-6 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-semibold transition-all hover:scale-105 active:scale-95 hidden sm:block">
                         Masuk
                     </button>
+                    <div className="p-2 bg-slate-100 rounded-full sm:hidden text-slate-900">
+                        <UserIcon size={20} />
+                    </div>
                 </Link>
             )}
-
-            {/* Mobile Menu Toggle */}
-            <div className="md:hidden flex items-center ml-2">
-                <button 
-                  onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                  className="text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors"
-                  aria-label="Toggle Mobile Menu"
-                >
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
-            </div>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white border-t border-slate-100 px-6 py-6 space-y-4 shadow-2xl absolute w-full left-0 animate-in slide-in-from-top-5">
-            <Link to="/discover" className="flex items-center justify-between text-slate-600 font-medium text-lg py-2" onClick={() => setIsMenuOpen(false)}>
-                Temukan Event <ArrowUpRight size={20} />
-            </Link>
-            <div className="pt-4 flex flex-col gap-3 border-t border-slate-100">
-              {user ? (
-                  <>
-                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
-                        <Button variant="primary" className="w-full justify-center">Dashboard</Button>
-                    </Link>
-                    <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="w-full py-3 text-red-600 font-medium text-center hover:bg-red-50 rounded-xl transition-colors">
-                        Keluar
-                    </button>
-                  </>
-              ) : (
-                  <>
-                    <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                        <Button variant="secondary" className="w-full justify-center bg-slate-100 border-transparent text-slate-900">Masuk</Button>
-                    </Link>
-                    <Link to="/login?mode=register" onClick={() => setIsMenuOpen(false)}>
-                        <Button variant="primary" className="w-full justify-center">Daftar Akun</Button>
-                    </Link>
-                  </>
-              )}
-            </div>
-        </div>
-      )}
     </nav>
   );
 };
@@ -168,7 +122,6 @@ export const DashboardNavbar = () => {
   const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   
@@ -320,16 +273,6 @@ export const DashboardNavbar = () => {
                 U
               </div>
             </Link>
-
-            {/* Mobile Search Toggle (Optional/Future) or just direct search below */}
-            <div className="md:hidden flex items-center">
-                 <button 
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors"
-                >
-                  {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-                </button>
-            </div>
 
             <div className="hidden md:flex items-center bg-slate-100/50 p-1 rounded-full border border-slate-200/50">
               <Link to="/dashboard">
@@ -514,54 +457,49 @@ export const DashboardNavbar = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
-        {isMobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-slate-100 bg-white animate-in slide-in-from-top-2">
-                <div className="space-y-4 px-2">
-                    {/* Mobile Search */}
-                    <div className="relative px-2">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                        <input 
-                            type="text" 
-                            placeholder="Cari event..." 
-                            className="w-full bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 rounded-xl pl-10 pr-4 py-2 text-sm transition-all outline-none border"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onKeyDown={(e) => {
-                                handleSearch(e);
-                                if (e.key === 'Enter') setIsMobileMenuOpen(false);
-                            }}
-                        />
-                    </div>
-
-                    {/* Mobile Links */}
-                    <div className="grid grid-cols-1 gap-1 px-2">
-                        <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 ${isActive('/dashboard') ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
-                            <LayoutDashboard size={18} /> Dashboard
-                        </Link>
-                        <Link to="/calendar" onClick={() => setIsMobileMenuOpen(false)} className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 ${isActive('/calendar') ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
-                            <Calendar size={18} /> Kalender
-                        </Link>
-                        <Link to="/discover" onClick={() => setIsMobileMenuOpen(false)} className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 ${isActive('/discover') ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
-                            <Globe size={18} /> Explore
-                        </Link>
-                        {role === 'admin' && (
-                            <Link to="/users" onClick={() => setIsMobileMenuOpen(false)} className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 ${isActive('/users') ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
-                                <Users size={18} /> Manajemen User
-                            </Link>
-                        )}
-                        {role === 'admin' && (
-                            <Link to="/create-event" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 text-indigo-600 bg-indigo-50/50">
-                                <Plus size={18} /> Buat Event Baru
-                            </Link>
-                        )}
-                    </div>
-                </div>
-            </div>
-        )}
       </div>
     </nav>
   );
+};
+
+export const BottomNavigation = () => {
+    const location = useLocation();
+    const { role } = useAuth();
+    const isActive = (path: string) => location.pathname === path || (path !== '/dashboard' && location.pathname.startsWith(path));
+
+    return (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 z-50 px-6 py-2 pb-safe">
+            <div className="flex justify-between items-center max-w-lg mx-auto">
+                <Link to="/dashboard" className={`flex flex-col items-center gap-1 p-2 ${isActive('/dashboard') ? 'text-indigo-600' : 'text-slate-400'}`}>
+                    <LayoutDashboard size={20} />
+                    <span className="text-[10px] font-bold">Beranda</span>
+                </Link>
+                <Link to="/calendar" className={`flex flex-col items-center gap-1 p-2 ${isActive('/calendar') ? 'text-indigo-600' : 'text-slate-400'}`}>
+                    <Calendar size={20} />
+                    <span className="text-[10px] font-bold">Kalender</span>
+                </Link>
+                
+                {role === 'admin' && (
+                    <Link to="/create-event" className="flex flex-col items-center -mt-8">
+                        <div className="w-12 h-12 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white ring-4 ring-white">
+                            <Plus size={24} />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 mt-1">Buat</span>
+                    </Link>
+                )}
+
+                <Link to="/discover" className={`flex flex-col items-center gap-1 p-2 ${isActive('/discover') ? 'text-indigo-600' : 'text-slate-400'}`}>
+                    <Globe size={20} />
+                    <span className="text-[10px] font-bold">Explore</span>
+                </Link>
+
+                <Link to="/settings" className={`flex flex-col items-center gap-1 p-2 ${isActive('/settings') ? 'text-indigo-600' : 'text-slate-400'}`}>
+                    <Settings size={20} />
+                    <span className="text-[10px] font-bold">Profil</span>
+                </Link>
+            </div>
+        </div>
+    );
 };
 
 // --- Layout Wrapper ---
@@ -583,9 +521,10 @@ const AppLayout = ({ type = 'public' }: { type?: 'public' | 'dashboard' | 'auth'
     <div className="min-h-screen flex flex-col font-sans text-slate-900">
       {effectiveType === 'public' && <PublicNavbar />}
       {effectiveType === 'dashboard' && <DashboardNavbar />}
+      {effectiveType === 'dashboard' && <BottomNavigation />}
       
       {/* Padding adjustment: Public navbar is fixed (needs pt-20), Dashboard is sticky (needs no padding) */}
-      <main className={`flex-grow ${effectiveType === 'public' ? 'pt-20' : ''} ${effectiveType === 'auth' ? 'flex items-center justify-center p-4' : ''}`}>
+      <main className={`flex-grow ${effectiveType === 'public' ? 'pt-20' : ''} ${effectiveType === 'dashboard' ? 'pb-20 md:pb-0' : ''} ${effectiveType === 'auth' ? 'flex items-center justify-center p-4' : ''}`}>
         <Outlet />
       </main>
 

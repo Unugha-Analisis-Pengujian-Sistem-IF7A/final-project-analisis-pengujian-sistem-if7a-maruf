@@ -259,21 +259,7 @@ describe('App Integration', () => {
         });
     });
 
-    it('handles public navbar logout (mobile menu)', async () => {
-        setupAuth({ user: { id: '123' } });
-        await act(async () => { render(<App />); });
-        
-        // Open mobile menu
-        const toggleBtn = screen.getByLabelText('Toggle Mobile Menu');
-        fireEvent.click(toggleBtn);
-        
-        // Click Logout
-        const logoutBtn = screen.getByText('Keluar', { selector: 'button' });
-        await act(async () => {
-            fireEvent.click(logoutBtn);
-        });
-        expect(mockAuth.signOut).toHaveBeenCalled();
-    });
+
 
     it('handles notification click with internal action_url', async () => {
         const mockNotifs = [
