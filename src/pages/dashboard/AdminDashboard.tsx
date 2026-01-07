@@ -141,7 +141,7 @@ export const AdminDashboard: React.FC = () => {
                                 <span className="text-xs font-black text-emerald-400 uppercase tracking-widest">Root Access Active</span>
                             </div>
                             <div className="h-4 w-[1px] bg-slate-700 hidden md:block"></div>
-                            <span className="text-[10px] text-slate-500 font-bold hidden md:block select-all">UID: ADMIN-{Math.random().toString(36).substr(2, 6).toUpperCase()}</span>
+                            <span className="text-[10px] text-slate-500 font-bold hidden md:block select-all">UID: ADMIN-{crypto.randomUUID().split('-')[0].toUpperCase()}</span>
                         </div>
                         <Button variant="secondary" data-testid="refresh-btn" className="w-full md:w-auto rounded-2xl bg-white/5 border-none text-white hover:bg-white/10 transition-colors py-6 font-bold tracking-wide" onClick={fetchData}>
                             <Clock size={18} className="mr-2 text-indigo-400" />

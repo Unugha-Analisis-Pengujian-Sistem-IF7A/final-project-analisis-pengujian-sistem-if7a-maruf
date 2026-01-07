@@ -231,7 +231,7 @@ const ParticipantDashboard: React.FC = () => {
                                                                     </div>
                                                                 ))}
                                                                 <div className="w-9 h-9 rounded-xl border-2 border-white bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-indigo-200">
-                                                                    +{Math.floor(Math.random() * 50) + 20}
+                                                                    +{Math.abs(event.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 50) + 20}
                                                                 </div>
                                                             </div>
                                                             <Badge status="Hadir" className="bg-emerald-500 text-white border-none px-4 py-1 font-black text-[10px] rounded-lg shadow-lg shadow-emerald-200" />
