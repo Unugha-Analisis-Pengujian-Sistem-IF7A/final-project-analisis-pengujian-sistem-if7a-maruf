@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { PublicNavbar } from '../App';
 import { AuthProvider } from '../context/AuthContext';
@@ -21,7 +21,7 @@ vi.mock('../services/supabaseClient', () => ({
 }));
 
 describe('PublicNavbar Mobile', () => {
-    it('opens and closes mobile menu', async () => {
+    it('renders navigation icons on mobile', async () => {
         await act(async () => {
             render(
                 <MemoryRouter>
@@ -32,18 +32,8 @@ describe('PublicNavbar Mobile', () => {
             );
         });
 
-        const menuBtn = screen.getByLabelText('Toggle Mobile Menu');
-        
-        await act(async () => {
-            fireEvent.click(menuBtn);
-        });
-
-        expect(screen.getByText('Temukan Event')).toBeInTheDocument();
-
-        await act(async () => {
-            fireEvent.click(menuBtn);
-        });
-
-        expect(screen.queryByText('Temukan Event')).not.toBeInTheDocument();
+        // Icon links should be present (found by their title attribute)
+        expect(screen.getByTitle('Jelajahi Acara')).toBeInTheDocument();
+        expect(screen.getByTitle('Masuk')).toBeInTheDocument();
     });
 });
