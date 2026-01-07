@@ -19,13 +19,10 @@ const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1
 const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
 const generateTimeOptions = () => {
-    const times = [];
-    for (let i = 0; i < 24; i++) {
-        const hour = i.toString().padStart(2, '0');
-        times.push(`${hour}:00`);
-        times.push(`${hour}:30`);
-    }
-    return times;
+    return Array.from({ length: 48 }, (_, i) => {
+        const hour = Math.floor(i / 2).toString().padStart(2, '0');
+        return `${hour}:${i % 2 === 0 ? '00' : '30'}`;
+    });
 };
 const TIME_OPTIONS = generateTimeOptions();
 
@@ -99,13 +96,15 @@ const CreateEvent: React.FC = () => {
           const isSelected = selectedDateStr === dateStr;
           const isToday = new Date().toISOString().split('T')[0] === dateStr;
 
+          let className = 'text-slate-600 hover:bg-slate-100';
+          if (isSelected) className = 'bg-indigo-600 text-white shadow-md shadow-indigo-300';
+          else if (isToday) className = 'bg-indigo-50 text-indigo-600';
+
           days.push(
               <button 
                 key={day} 
                 onClick={(e) => { e.stopPropagation(); onSelect(dateStr); setPickerOpen('none'); }}
-                className={`h-8 w-8 text-xs font-bold rounded-full transition-all 
-                    ${isSelected ? 'bg-indigo-600 text-white shadow-md shadow-indigo-300' : 
-                      isToday ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-100'}`}
+                className={`h-8 w-8 text-xs font-bold rounded-full transition-all ${className}`}
               >
                   {day}
               </button>
@@ -190,7 +189,7 @@ const CreateEvent: React.FC = () => {
             const { error: uploadError } = await supabase.storage.from('banners').upload(filePath, bannerFile);
             if (uploadError) throw uploadError;
             imagePath = filePath;
-        } else if (bannerPreview && bannerPreview.startsWith('http')) {
+        } else if (bannerPreview?.startsWith('http')) {
             imagePath = bannerPreview;
         } else {
             const randomValues = new Uint32Array(1);
@@ -466,9 +465,9 @@ const CreateEvent: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     
                     {/* Ticket Card */}
-                    <div className={`p-4 rounded-2xl border transition-all cursor-pointer ${!isFree ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-100 hover:border-slate-200'}`}>
+                    <div className={`p-4 rounded-2xl border transition-all cursor-pointer ${isFree ? 'bg-white border-slate-100 hover:border-slate-200' : 'bg-indigo-50 border-indigo-200'}`}>
                         <div className="flex justify-between items-start mb-2">
-                             <div className={`p-2 rounded-xl ${!isFree ? 'bg-indigo-200/50 text-indigo-700' : 'bg-slate-100 text-slate-500'}`}>
+                             <div className={`p-2 rounded-xl ${isFree ? 'bg-slate-100 text-slate-500' : 'bg-indigo-200/50 text-indigo-700'}`}>
                                 <Ticket size={20} />
                              </div>
                              <div className="flex items-center gap-2">
@@ -516,17 +515,10 @@ const CreateEvent: React.FC = () => {
                     </div>
 
                     {/* Approval Card */}
-                     <div 
-                        role="button"
-                        tabIndex={0}
+                    <button 
+                        type="button"
                         onClick={() => setRequireApproval(!requireApproval)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                setRequireApproval(!requireApproval);
-                            }
-                        }}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer ${requireApproval ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100 hover:border-slate-200'}`}
+                        className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer ${requireApproval ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100 hover:border-slate-200'}`}
                     >
                         <div className="flex justify-between items-start mb-2">
                              <div className={`p-2 rounded-xl ${requireApproval ? 'bg-blue-200/50 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
@@ -538,7 +530,7 @@ const CreateEvent: React.FC = () => {
                         <p className="text-xs text-slate-500 mt-1">
                             {requireApproval ? 'Pendaftar harus dikonfirmasi manual' : 'Pendaftaran otomatis diterima'}
                         </p>
-                    </div>
+                    </button>
 
                     {/* Type Selector (Custom Dropdown UI) */}
                     <div className="relative group h-full">

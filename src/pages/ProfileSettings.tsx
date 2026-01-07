@@ -3,8 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Lock, Save, LogOut, Loader2, 
-  UploadCloud, Globe, Instagram, Youtube, 
-  Linkedin, Twitter, Chrome, Trash2,
+  UploadCloud, Globe, Camera, Video, 
+  Briefcase, Hash, Monitor, Trash2,
   Plus, MoreHorizontal,
   CheckCircle2, ShieldCheck
 } from 'lucide-react';
@@ -129,7 +129,7 @@ const ProfileSettings: React.FC = () => {
           await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
           setAvatarUrl(publicUrl);
           showToast('Photo profil berhasil diupload!', 'success');
-          setTimeout(() => window.location.reload(), 1500);
+          setTimeout(() => globalThis.location.reload(), 1500);
       } catch (error: unknown) {
           showToast('Gagal upload: ' + getErrorMessage(error), 'error');
       } finally {
@@ -169,7 +169,7 @@ const ProfileSettings: React.FC = () => {
   };
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
+    const confirmed = globalThis.confirm(
       'APAKAH ANDA YAKIN? Tindakan ini akan MENGHAPUS SEMUA DATA LOGIN DAN PROFIL ANDA secara permanen dari UNUGHA Event.'
     );
     
@@ -196,9 +196,7 @@ const ProfileSettings: React.FC = () => {
     }
   };
 
-  const displayAvatar = avatarUrl 
-      ? avatarUrl 
-      : `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.email}&backgroundColor=b6e3f4`;
+  const displayAvatar = avatarUrl || `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.email}&backgroundColor=b6e3f4`;
 
   return (
     <div className="min-h-screen py-12">
@@ -239,8 +237,9 @@ const ProfileSettings: React.FC = () => {
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Depan</label>
+                       <label htmlFor="firstName" className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Depan</label>
                        <input 
+                         id="firstName"
                          type="text" 
                          value={firstName}
                          onChange={(e) => setFirstName(e.target.value)}
@@ -248,8 +247,9 @@ const ProfileSettings: React.FC = () => {
                        />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Belakang</label>
+                       <label htmlFor="lastName" className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Belakang</label>
                        <input 
+                         id="lastName"
                          type="text" 
                          value={lastName}
                          onChange={(e) => setLastName(e.target.value)}
@@ -259,10 +259,11 @@ const ProfileSettings: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Pengguna</label>
+                    <label htmlFor="username" className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Pengguna</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">@</span>
                       <input 
+                        id="username"
                         type="text" 
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -273,8 +274,9 @@ const ProfileSettings: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bio</label>
+                    <label htmlFor="bio" className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bio</label>
                     <textarea 
+                      id="bio"
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       rows={4}
@@ -286,7 +288,7 @@ const ProfileSettings: React.FC = () => {
 
                 {/* Avatar Upload */}
                 <div className="flex flex-col items-center gap-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest self-start md:self-center">Foto Profil</label>
+                  <label htmlFor="avatar-upload" className="text-[10px] font-black text-slate-400 uppercase tracking-widest self-start md:self-center">Photo Profil</label>
                   <div className="relative group">
                     <div className="w-36 h-36 rounded-[40px] border-8 border-white overflow-hidden bg-indigo-50 shadow-xl shadow-indigo-500/10 transition-transform group-hover:scale-105 duration-500">
                       <img src={displayAvatar} className="w-full h-full object-cover" alt="Profile" />
@@ -297,21 +299,21 @@ const ProfileSettings: React.FC = () => {
                     >
                       <UploadCloud size={18} />
                     </button>
-                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                    <input id="avatar-upload" type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
                   </div>
                 </div>
               </div>
 
               {/* Social Links */}
               <div className="space-y-4 pt-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tautan Sosial</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p id="social-links-label" className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tautan Sosial</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-labelledby="social-links-label">
                   {[
-                    { id: 'instagram', icon: Instagram, prefix: 'instagram.com/' },
-                    { id: 'x', icon: Twitter, prefix: 'x.com/' },
-                    { id: 'youtube', icon: Youtube, prefix: 'youtube.com/@' },
+                    { id: 'instagram', icon: Camera, prefix: 'instagram.com/' },
+                    { id: 'x', icon: Hash, prefix: 'x.com/' },
+                    { id: 'youtube', icon: Video, prefix: 'youtube.com/@' },
                     { id: 'tiktok', icon: Globe, prefix: 'tiktok.com/@' },
-                    { id: 'linkedin', icon: Linkedin, prefix: 'linkedin.com/in/' },
+                    { id: 'linkedin', icon: Briefcase, prefix: 'linkedin.com/in/' },
                     { id: 'website', icon: Globe, placeholder: 'Situs web Anda' },
                   ].map((social) => (
                     <div key={social.id} className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl px-4 py-3.5 hover:border-indigo-200 transition-all shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/5">
@@ -383,11 +385,12 @@ const ProfileSettings: React.FC = () => {
                <p className="text-sm text-slate-500">Kelola nomor telepon untuk masuk dan SMS.</p>
                
                <div className="space-y-3">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nomor HP</label>
+                 <label htmlFor="phone" className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nomor HP</label>
                  <div className="flex flex-col sm:flex-row gap-4 max-w-lg">
                    <div className="relative flex-grow">
                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-900 font-black">+62</span>
                      <input 
+                       id="phone"
                        type="text" 
                        value={phone}
                        onChange={(e) => setPhone(e.target.value)}
@@ -485,7 +488,7 @@ const ProfileSettings: React.FC = () => {
                <div className="bg-white border border-slate-100 rounded-[32px] overflow-hidden divide-y divide-slate-50 shadow-sm">
                  <div className="p-8 flex justify-between items-center group">
                     <div className="flex gap-5">
-                      <div className="w-14 h-14 bg-indigo-50 rounded-[22px] text-indigo-600 flex items-center justify-center shadow-inner"><Chrome size={22} /></div>
+                      <div className="w-14 h-14 bg-indigo-50 rounded-[22px] text-indigo-600 flex items-center justify-center shadow-inner"><Monitor size={22} /></div>
                       <div>
                         <div className="flex items-center gap-3">
                            <h4 className="text-base font-bold text-slate-900">Chrome on Windows</h4>
@@ -508,7 +511,7 @@ const ProfileSettings: React.FC = () => {
                   <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="text-center md:text-left">
                        <h3 className="text-xl font-black text-red-600">Hapus Akun Permanen</h3>
-                       <p className="text-slate-500 text-sm mt-2 max-w-md">Menghapus akun akan menghilangkan semua data pendaftaran, biodata, dan histori event kamu selamanya.</p>
+                       <p className="text-slate-500 text-sm mt-2 max-w-md">Menghapus akun akan menghilangkan semua data pendaftaran, biodata, dan history event kamu selamanya.</p>
                     </div>
                     <Button 
                       variant="ghost" 

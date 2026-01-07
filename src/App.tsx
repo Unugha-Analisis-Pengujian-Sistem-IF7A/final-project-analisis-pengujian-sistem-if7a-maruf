@@ -36,9 +36,6 @@ import ProfileSettings from './pages/ProfileSettings';
 
 import UserManagement from './pages/UserManagement';
 
-// Types
-import { User } from './types';
-
 // --- Helper Components ---
 
 const TimeDisplay = () => {
@@ -364,45 +361,52 @@ export const DashboardNavbar = () => {
                                 </div>
                             ) : (
                                 <div>
-                                    {notifications.map(notif => (
-                                        <div 
-                                            key={notif.id}
-                                            role="button"
-                                            tabIndex={0}
-                                            onClick={() => markAsRead(notif.id, notif.action_url)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    markAsRead(notif.id, notif.action_url);
-                                                }
-                                            }}
-                                            className={`p-4 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors ${!notif.is_read ? 'bg-indigo-50/40' : ''}`}
-                                        >
-                                            <div className="flex gap-3">
-                                                <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                                                    notif.type === 'success' ? 'bg-green-100 text-green-600' : 
-                                                    notif.type === 'warning' ? 'bg-orange-100 text-orange-600' :
-                                                    'bg-indigo-100 text-indigo-600'
-                                                }`}>
-                                                    {notif.type === 'success' ? <CheckCircle2 size={16} /> :
-                                                     notif.type === 'warning' ? <AlertTriangle size={16} /> :
-                                                     <Info size={16} />}
+                                    {notifications.map(notif => {
+                                        const typeStyles = {
+                                            success: 'bg-green-100 text-green-600',
+                                            warning: 'bg-orange-100 text-orange-600',
+                                            info: 'bg-indigo-100 text-indigo-600'
+                                        };
+                                        const iconMap = {
+                                            success: CheckCircle2,
+                                            warning: AlertTriangle,
+                                            info: Info
+                                        };
+                                        const TypeIcon = iconMap[notif.type as keyof typeof iconMap] || Info;
+
+                                        return (
+                                            <button 
+                                                key={notif.id}
+                                                type="button"
+                                                onClick={() => markAsRead(notif.id, notif.action_url)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        markAsRead(notif.id, notif.action_url);
+                                                    }
+                                                }}
+                                                className={`w-full text-left p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors ${notif.is_read ? '' : 'bg-indigo-50/40'}`}
+                                            >
+                                                <div className="flex gap-3">
+                                                    <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${typeStyles[notif.type as keyof typeof typeStyles] || typeStyles.info}`}>
+                                                        <TypeIcon size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className={`text-sm ${notif.is_read ? 'font-medium text-slate-700' : 'font-bold text-slate-900'}`}>
+                                                            {notif.title}
+                                                        </h4>
+                                                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{notif.message}</p>
+                                                        <p className="text-[10px] text-slate-400 mt-2">
+                                                            {new Date(notif.created_at).toLocaleDateString('id-ID')} • {new Date(notif.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}
+                                                        </p>
+                                                    </div>
+                                                    {!notif.is_read && (
+                                                        <div className="shrink-0 w-2 h-2 rounded-full bg-indigo-500 mt-2"></div>
+                                                    )}
                                                 </div>
-                                                <div>
-                                                    <h4 className={`text-sm ${!notif.is_read ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
-                                                        {notif.title}
-                                                    </h4>
-                                                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{notif.message}</p>
-                                                    <p className="text-[10px] text-slate-400 mt-2">
-                                                        {new Date(notif.created_at).toLocaleDateString('id-ID')} • {new Date(notif.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}
-                                                    </p>
-                                                </div>
-                                                {!notif.is_read && (
-                                                    <div className="shrink-0 w-2 h-2 rounded-full bg-indigo-500 mt-2"></div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>

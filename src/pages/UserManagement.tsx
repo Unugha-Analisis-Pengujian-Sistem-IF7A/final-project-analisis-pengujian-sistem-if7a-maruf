@@ -407,7 +407,13 @@ const UserManagement: React.FC = () => {
             {/* Add User Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsAddModalOpen(false)}></div>
+                    <button 
+                        type="button"
+                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm w-full h-full border-none p-0 cursor-default" 
+                        onClick={() => setIsAddModalOpen(false)}
+                        onKeyDown={(e) => e.key === 'Enter' && setIsAddModalOpen(false)}
+                        aria-label="Close modal backdrop"
+                    ></button>
                     <Card className="relative w-full max-w-md p-8 animate-in zoom-in-95 duration-200 shadow-2xl border-none">
                         <button 
                             onClick={() => setIsAddModalOpen(false)}
@@ -456,8 +462,8 @@ const UserManagement: React.FC = () => {
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2 ml-1">Role Awal</label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <label htmlFor="newRole" className="block text-sm font-medium text-slate-700 mb-2 ml-1">Role Awal</label>
+                                <div id="newRole" className="grid grid-cols-2 gap-2">
                                     {(['participant', 'admin'] as const).map((r) => (
                                         <button
                                             key={r}

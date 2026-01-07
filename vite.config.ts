@@ -57,7 +57,7 @@ export default defineConfig(({ mode }) => {
       'src/types.ts',
       '**/*.css',
       '**/*.d.ts',
-      '**/*.md'
+      '**/*.md',
     ]
   }
 }

@@ -97,9 +97,10 @@ const Discover: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <EventPreviewModal 
+            key={selectedEvent?.id || 'modal'}
             isOpen={!!selectedEvent} 
             onClose={() => setSelectedEvent(null)} 
-            event={selectedEvent} 
+            event={selectedEvent || {}} 
         />
 
         {/* Search Header */}
@@ -122,9 +123,9 @@ const Discover: React.FC = () => {
 
             {/* Filters */}
             <div className="flex flex-wrap justify-center gap-2 mt-6">
-                {['Semua', 'Teknologi', 'Seni Budaya', 'Olahraga', 'Seminar', 'Workshop'].map((cat, idx) => (
+                {['Semua', 'Teknologi', 'Seni Budaya', 'Olahraga', 'Seminar', 'Workshop'].map((cat) => (
                     <button 
-                        key={idx} 
+                        key={cat} 
                         onClick={() => setFilter(cat)}
                         className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${filter === cat ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-500'}`}
                     >
@@ -135,64 +136,60 @@ const Discover: React.FC = () => {
         </div>
 
         {/* Grid */}
-        {loading ? (
-            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>
-        ) : events.length === 0 ? (
-            <div className="text-center py-20 text-slate-500">Tidak ada event ditemukan.</div>
-        ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {events.map((event) => (
-                    <div 
-                        key={event.id} 
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setSelectedEvent(event)} 
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                setSelectedEvent(event);
-                            }
-                        }}
-                        className="cursor-pointer"
-                    >
-                        <Card className="h-full p-0 overflow-hidden group hover:shadow-2xl transition-all duration-300 border-0">
-                            <div className="relative h-48 overflow-hidden bg-slate-100">
-                                <img 
-                                    src={getStorageUrl(event.image_url) || 'https://via.placeholder.com/500x300?text=Event'} 
-                                    alt={event.title} 
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                                />
-                                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-slate-800 uppercase tracking-wide shadow-sm">
-                                    {event.type}
-                                </div>
-                            </div>
-                            <div className="p-6">
+        {/* Grid */}
+        {(() => {
+            if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+            
+            if (events.length === 0) return <div className="text-center py-20 text-slate-500">Tidak ada event ditemukan.</div>;
 
-
-                                <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">{event.title}</h3>
-                                <div className="space-y-2 text-sm text-slate-500 mb-4">
-                                    <div className="flex items-center gap-2"><Calendar size={16} className="text-indigo-500" /> {event.date}</div>
-                                    <div className="flex items-center gap-2"><MapPin size={16} className="text-indigo-500" /> {event.location}</div>
-                                </div>
-                                <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
-                                    <div className="flex flex-col">
-                                        <span className="font-bold text-indigo-600">{event.status || 'Terbuka'}</span>
-                                        {event.max_attendees && (
-                                            <span className={`text-[10px] font-bold ${event.max_attendees - (event.registered_count || 0) <= 5 ? 'text-red-500' : 'text-slate-400'}`}>
-                                                {event.max_attendees - (event.registered_count || 0) <= 0 
-                                                    ? 'KUOTA PENUH' 
-                                                    : `${event.max_attendees - (event.registered_count || 0)} Kuota Tersisa`}
-                                            </span>
-                                        )}
+            return (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {events.map((event) => (
+                        <button 
+                            key={event.id} 
+                            type="button"
+                            onClick={() => setSelectedEvent(event)} 
+                            className="cursor-pointer text-left border-none p-0 bg-transparent block"
+                        >
+                            <Card className="h-full p-0 overflow-hidden group hover:shadow-2xl transition-all duration-300 border-0">
+                                <div className="relative h-48 overflow-hidden bg-slate-100">
+                                    <img 
+                                        src={getStorageUrl(event.image_url) || 'https://via.placeholder.com/500x300?text=Event'} 
+                                        alt={event.title} 
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                                    />
+                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-slate-800 uppercase tracking-wide shadow-sm">
+                                        {event.type}
                                     </div>
-                                    <span className="text-xs text-slate-400">Klik untuk Preview →</span>
                                 </div>
-                            </div>
-                        </Card>
-                    </div>
-                ))}
-            </div>
-        )}
+                                <div className="p-6">
+
+
+                                    <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">{event.title}</h3>
+                                    <div className="space-y-2 text-sm text-slate-500 mb-4">
+                                        <div className="flex items-center gap-2"><Calendar size={16} className="text-indigo-500" /> {event.date}</div>
+                                        <div className="flex items-center gap-2"><MapPin size={16} className="text-indigo-500" /> {event.location}</div>
+                                    </div>
+                                    <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-indigo-600">{event.status || 'Terbuka'}</span>
+                                            {!!event.max_attendees && (
+                                                <span className={`text-[10px] font-bold ${event.max_attendees - (event.registered_count || 0) <= 5 ? 'text-red-500' : 'text-slate-400'}`}>
+                                                    {event.max_attendees - (event.registered_count || 0) <= 0 
+                                                        ? 'KUOTA PENUH' 
+                                                        : `${event.max_attendees - (event.registered_count || 0)} Kuota Tersisa`}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="text-xs text-slate-400">Klik untuk Preview →</span>
+                                    </div>
+                                </div>
+                            </Card>
+                        </button>
+                    ))}
+                </div>
+            );
+        })()}
     </div>
   );
 };

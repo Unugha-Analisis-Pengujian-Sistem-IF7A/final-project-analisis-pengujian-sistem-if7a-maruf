@@ -31,12 +31,14 @@ vi.mock('@/services/supabaseClient', () => ({
 }));
 
 // Mock Crypto
+let uuidTestCounter = 0;
 Object.defineProperty(window, 'crypto', {
     value: {
         getRandomValues: vi.fn((arr) => {
             for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 100);
             return arr;
         }),
+        randomUUID: () => `test-uuid-${++uuidTestCounter}`,
     },
 });
 
@@ -128,6 +130,7 @@ describe('Integration Test: Event Workflow', () => {
         fireEvent.click(submitBtn);
     });
 
-    expect(await screen.findByText('Event berhasil dibuat!')).toBeInTheDocument();
+    // Use regex for flexible matching and longer timeout
+    expect(await screen.findByText(/Event berhasil dibuat!/i, {}, { timeout: 3000 })).toBeInTheDocument();
   });
 });

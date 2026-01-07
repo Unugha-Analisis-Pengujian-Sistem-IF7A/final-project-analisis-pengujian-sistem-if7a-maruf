@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children?: React.ReactNode }) => {
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = React.useCallback(async (userId: string) => {
     // Add a 5s timeout to profile fetch
     const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 5000));
     
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }: { children?: React.ReactNode }) => {
       console.error("Profile fetch error:", err);
       setRole('participant'); // Default fallback
     }
-  };
+  }, []);
 
   useEffect(() => {
     // onAuthStateChange fires on mount with current session
@@ -68,27 +68,27 @@ export const AuthProvider = ({ children }: { children?: React.ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchProfile]);
 
-  const signOut = async () => {
+  const signOut = React.useCallback(async () => {
     await supabase.auth.signOut();
     setRole(null);
     setUser(null);
     setSession(null);
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const refreshProfile = React.useCallback(async () => {
     if (user) await fetchProfile(user.id);
-  };
+  }, [user, fetchProfile]);
 
-  const value = {
+  const value = React.useMemo(() => ({
     session,
     user,
     role,
     loading,
     signOut,
     refreshProfile
-  };
+  }), [session, user, role, loading, signOut, refreshProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

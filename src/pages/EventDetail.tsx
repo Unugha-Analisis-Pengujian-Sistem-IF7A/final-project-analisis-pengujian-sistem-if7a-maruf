@@ -1,30 +1,153 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  MapPin, 
-  Clock, 
-  Share2, 
-  ArrowLeft, 
-  Loader2, 
-  CheckCircle2,
-  Video,
-  Smile,
-  Mail,
-  MessageCircle,
-  Copy,
-  ExternalLink,
-  CalendarPlus,
-  BellRing,
-  Ticket,
-  ShieldAlert,
-  Trash2
+  MapPin, Clock, Share2, ArrowLeft, Loader2, CheckCircle2,
+  Video, Smile, Mail, MessageCircle, Copy, ExternalLink,
+  CalendarPlus, BellRing, Ticket, ShieldAlert, Trash2
 } from 'lucide-react';
 import { Button } from '../components/UI';
 import { supabase, getStorageUrl, getErrorMessage } from '../services/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import ShareModal from '../components/ShareModal';
+
+// --- Sub-Components ---
+
+const HostControls = ({ isHost, onDelete, deleting }: { isHost: boolean, onDelete: () => void, deleting: boolean }) => {
+    if (!isHost) return null;
+    return (
+        <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
+            <div className="flex items-start gap-3">
+                <ShieldAlert className="text-red-500 shrink-0 mt-1" size={20} />
+                <div className="flex-1">
+                    <h3 className="font-bold text-red-900 text-base mb-1">Area Host</h3>
+                    <p className="text-sm text-red-700 mb-4">
+                        Sebagai penyelenggara, Anda memiliki kontrol penuh atas event ini.
+                    </p>
+                    <div className="flex gap-3">
+                        <Button 
+                            onClick={onDelete}
+                            disabled={deleting}
+                            variant="secondary" 
+                            className="bg-white border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 h-10 text-sm"
+                        >
+                            {deleting ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
+                            {deleting ? 'Menghapus...' : 'Hapus Event'}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const NotificationSettings = ({ 
+    isRegistered, 
+    showSuccessAnim, 
+    emailNotif, 
+    waNotif, 
+    onToggle 
+}: { 
+    isRegistered: boolean, 
+    showSuccessAnim: boolean, 
+    emailNotif: boolean, 
+    waNotif: boolean, 
+    onToggle: (type: 'email' | 'wa') => void 
+}) => {
+    if (!isRegistered || showSuccessAnim) return null;
+
+    return (
+        <div className="border-t border-slate-100 pt-8 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <BellRing size={20} className="text-slate-900" />
+                        <h4 className="font-bold text-slate-900">Pengaturan Notifikasi</h4>
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        Sinkronisasi Aktif
+                    </span>
+                </div>
+                
+                <div className="space-y-3">
+                    {/* Email Toggle */}
+                    <button 
+                        type="button"
+                        onClick={() => onToggle('email')}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer select-none ${
+                            emailNotif 
+                            ? 'bg-indigo-50/50 border-indigo-100' 
+                            : 'bg-white border-slate-100 hover:border-slate-200'
+                        }`}
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${emailNotif ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
+                                <Mail size={18} />
+                            </div>
+                            <div>
+                                <p className={`text-sm font-bold transition-colors ${emailNotif ? 'text-indigo-900' : 'text-slate-600'}`}>Email Reminder</p>
+                                <p className="text-xs text-slate-500">{emailNotif ? 'Pengingat dikirim H-1 Acara' : 'Notifikasi email dimatikan'}</p>
+                            </div>
+                        </div>
+                        <div className={`w-12 h-7 rounded-full relative transition-colors duration-200 ${emailNotif ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200 ${emailNotif ? 'right-1' : 'left-1'}`}></div>
+                        </div>
+                    </button>
+
+                    {/* Whatsapp Toggle */}
+                    <button 
+                        type="button"
+                        onClick={() => onToggle('wa')}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer select-none ${
+                            waNotif 
+                            ? 'bg-green-50/50 border-green-100' 
+                            : 'bg-white border-slate-100 hover:border-slate-200'
+                        }`}
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${waNotif ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
+                                <MessageCircle size={18} />
+                            </div>
+                            <div>
+                                <p className={`text-sm font-bold transition-colors ${waNotif ? 'text-green-900' : 'text-slate-600'}`}>WhatsApp Info</p>
+                                <p className="text-xs text-slate-500">{waNotif ? 'Update info via WhatsApp aktif' : 'Notifikasi WA dimatikan'}</p>
+                            </div>
+                        </div>
+                        <div className={`w-12 h-7 rounded-full relative transition-colors duration-200 ${waNotif ? 'bg-green-600' : 'bg-slate-200'}`}>
+                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200 ${waNotif ? 'right-1' : 'left-1'}`}></div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SuccessAnimation = ({ show }: { show: boolean }) => {
+    if (!show) return null;
+    return (
+        <div className="absolute inset-0 z-50 bg-[#FDFBF7] flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
+            {/* Simple CSS Confetti Particles */}
+            <div className="absolute top-10 left-10 w-2 h-2 bg-indigo-500 rounded-full animate-bounce delay-100"></div>
+            <div className="absolute top-20 right-20 w-3 h-3 bg-orange-500 rounded-full animate-bounce delay-300"></div>
+            <div className="absolute bottom-10 left-1/3 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <div className="absolute top-1/3 right-10 w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-in zoom-in duration-300">
+                <CheckCircle2 size={40} className="text-green-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Pendaftaran Berhasil!</h3>
+            <p className="text-slate-500 text-center max-w-xs">Tiket telah ditambahkan ke Dashboard Anda.</p>
+            <div className="mt-6 flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm text-sm font-medium text-slate-600">
+                <Ticket size={16} className="text-indigo-600" />
+                <span>Tiket Disimpan</span>
+            </div>
+        </div>
+    );
+};
+
+// --- Main Component ---
 
 const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -95,13 +218,13 @@ const EventDetail: React.FC = () => {
 
       setRegistering(true);
       try {
-          const { error } = await supabase
+          const { error: regError } = await supabase
               .from('registrations')
               .insert([
                   { user_id: user.id, event_id: id }
               ]);
 
-          if (error) throw error;
+          if (regError) throw regError;
 
           // Success Flow
           setIsRegistered(true);
@@ -110,7 +233,7 @@ const EventDetail: React.FC = () => {
           // Hide animation after 3.5s to settle into standard view
           setTimeout(() => setShowSuccessAnim(false), 3500);
 
-      } catch (err: any) {
+      } catch (err: unknown) {
           const msg = getErrorMessage(err);
           showToast('Gagal mendaftar: ' + msg, 'error');
       } finally {
@@ -119,7 +242,7 @@ const EventDetail: React.FC = () => {
   };
 
   const handleCopyLink = () => {
-      const url = window.location.href;
+      const url = globalThis.location.href;
       navigator.clipboard.writeText(url);
       showToast('Tautan berhasil disalin!', 'success');
   };
@@ -141,7 +264,7 @@ const EventDetail: React.FC = () => {
   // --- External Actions Logic ---
 
   const addToCalendar = () => {
-    if (!event || !event.date) return;
+    if (!event?.date) return;
     
     try {
         // Robust Date Parsing
@@ -174,20 +297,20 @@ const EventDetail: React.FC = () => {
 
         const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${startDateTime}/${endDateTime}&details=${encodeURIComponent(event.description || '')}&location=${encodeURIComponent(event.location || 'UNUGHA')}&ctz=Asia/Jakarta`;
         
-        window.open(gCalUrl, '_blank', 'noopener,noreferrer');
+        globalThis.open(gCalUrl, '_blank', 'noopener,noreferrer');
     } catch {
         showToast("Gagal membuka kalender.", 'error');
     }
   };
 
   const openLocationMap = () => {
-      if (!event || !event.location) return;
+      if (!event?.location) return;
 
       const loc = event.location.toLowerCase();
       
       // 1. Direct URL
       if (loc.startsWith('http') || loc.startsWith('https')) {
-          window.open(event.location, '_blank', 'noopener,noreferrer');
+          globalThis.open(event.location, '_blank', 'noopener,noreferrer');
           return;
       }
 
@@ -195,12 +318,12 @@ const EventDetail: React.FC = () => {
       const isOnlineLink = loc.includes('zoom') || loc.includes('meet') || loc.includes('teams') || loc.includes('online') || loc.includes('virtual');
 
       if (isOnlineLink) {
-          if (loc.includes('zoom')) window.open('https://zoom.us/join', '_blank', 'noopener,noreferrer');
-          else if (loc.includes('meet')) window.open('https://meet.google.com/', '_blank', 'noopener,noreferrer');
+          if (loc.includes('zoom')) globalThis.open('https://zoom.us/join', '_blank', 'noopener,noreferrer');
+          else if (loc.includes('meet')) globalThis.open('https://meet.google.com/', '_blank', 'noopener,noreferrer');
           else showToast('Link meeting spesifik belum tersedia.', 'info');
       } else {
           // 3. Offline Location -> Google Maps
-          window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`, '_blank', 'noopener,noreferrer');
+          globalThis.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`, '_blank', 'noopener,noreferrer');
       }
   };
 
@@ -208,16 +331,16 @@ const EventDetail: React.FC = () => {
   const isHost = user && event && user.id === event.host_id;
 
   const handleDelete = async () => {
-      if (!confirm("PERINGATAN: Apakah Anda yakin ingin menghapus event ini? Data pendaftar juga akan terhapus.")) return;
+      if (!globalThis.confirm("PERINGATAN: Apakah Anda yakin ingin menghapus event ini? Data pendaftar juga akan terhapus.")) return;
       
       setDeleting(true);
       try {
-          const { error } = await supabase.from('events').delete().eq('id', id);
-          if (error) throw error;
+          const { error: delError } = await supabase.from('events').delete().eq('id', id);
+          if (delError) throw delError;
           
           showToast("Event berhasil dihapus.", 'success');
           navigate('/dashboard');
-      } catch (e: any) {
+      } catch (e: unknown) {
           showToast("Gagal menghapus event: " + getErrorMessage(e), 'error');
           setDeleting(false);
       }
@@ -239,12 +362,25 @@ const EventDetail: React.FC = () => {
   const month = isValidDate ? dateObj.toLocaleDateString('id-ID', { month: 'short' }).toUpperCase() : 'NOV';
   const day = isValidDate ? dateObj.getDate() : '-';
   const fullDate = isValidDate ? dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Tanggal segera diumumkan';
-  const timeString = event.time ? `${event.time.substring(0, 5)} WIB` : 'Waktu belum ditentukan';
+  const timeString = event.time ? `${(event.time as string).substring(0, 5)} WIB` : 'Waktu belum ditentukan';
 
   const isOnline = event.location?.toLowerCase().includes('virtual') || 
                    event.location?.toLowerCase().includes('online') || 
                    event.location?.toLowerCase().includes('zoom') ||
                    event.location?.toLowerCase().includes('meet');
+
+  // Helper for status text
+  const getRegTitle = () => {
+      if (isRegistered) return 'Kamu Sudah Terdaftar!';
+      if (user) return 'Siap Bergabung?';
+      return 'Pendaftaran Dibuka';
+  };
+
+  const getRegDesc = () => {
+      if (isRegistered) return 'Simpan tiketmu dan sampai jumpa di lokasi.';
+      if (user) return 'Amankan kursimu sekarang sebelum penuh.';
+      return 'Login akunmu untuk mendaftar event ini.';
+  };
 
   return (
     <div className="min-h-screen bg-white pb-20 pt-8">
@@ -323,17 +459,10 @@ const EventDetail: React.FC = () => {
                         {/* Info Widgets */}
                         <div className="flex flex-col sm:flex-row gap-6 border-y border-slate-100 py-6">
                              {/* Date Widget */}
-                             <div 
-                                role="button"
-                                tabIndex={0}
+                             <button 
+                                type="button"
                                 onClick={addToCalendar}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        addToCalendar();
-                                    }
-                                }}
-                                className="flex items-start gap-4 p-2 -ml-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-all group relative"
+                                className="w-full text-left flex items-start gap-4 p-2 -ml-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-all group relative border-none bg-transparent"
                                 title="Tambahkan ke Google Calendar"
                              >
                                 <div className="w-14 h-14 rounded-2xl border border-slate-200 flex flex-col items-center justify-center bg-white shrink-0 shadow-sm group-hover:border-indigo-200 transition-colors">
@@ -347,20 +476,13 @@ const EventDetail: React.FC = () => {
                                     <p className="text-slate-500 text-sm mt-0.5">{timeString}</p>
                                     <p className="text-xs text-indigo-600 font-medium mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Tambahkan ke Kalender</p>
                                 </div>
-                             </div>
+                             </button>
 
                              {/* Location Widget */}
-                             <div 
-                                role="button"
-                                tabIndex={0}
+                             <button 
+                                type="button"
                                 onClick={openLocationMap}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        openLocationMap();
-                                    }
-                                }}
-                                className="flex items-start gap-4 sm:border-l sm:border-slate-100 sm:pl-6 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-all group"
+                                className="w-full text-left flex items-start gap-4 sm:border-l sm:border-slate-100 sm:pl-6 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-all group border-none bg-transparent"
                                 title={isOnline ? "Buka Link Meeting" : "Buka Google Maps"}
                              >
                                 <div className="w-14 h-14 rounded-2xl border border-slate-200 flex items-center justify-center bg-white shrink-0 shadow-sm text-slate-700 group-hover:border-indigo-200 transition-colors">
@@ -376,31 +498,13 @@ const EventDetail: React.FC = () => {
                                         {isOnline ? 'Buka Link' : 'Lihat Peta'}
                                     </p>
                                 </div>
-                             </div>
+                             </button>
                         </div>
                     </div>
 
-                    {/* Registration Card (The Beige Box) */}
+                    {/* Registration Card */}
                     <div className="bg-[#FDFBF7] rounded-[32px] p-6 md:p-8 border border-[#EFECE6] relative overflow-hidden transition-all duration-500">
-                         {showSuccessAnim && (
-                            <div className="absolute inset-0 z-50 bg-[#FDFBF7] flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
-                                {/* Simple CSS Confetti Particles */}
-                                <div className="absolute top-10 left-10 w-2 h-2 bg-indigo-500 rounded-full animate-bounce delay-100"></div>
-                                <div className="absolute top-20 right-20 w-3 h-3 bg-orange-500 rounded-full animate-bounce delay-300"></div>
-                                <div className="absolute bottom-10 left-1/3 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                <div className="absolute top-1/3 right-10 w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
-
-                                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-in zoom-in duration-300">
-                                    <CheckCircle2 size={40} className="text-green-600" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-slate-900 mb-2">Pendaftaran Berhasil!</h3>
-                                <p className="text-slate-500 text-center max-w-xs">Tiket telah ditambahkan ke Dashboard Anda.</p>
-                                <div className="mt-6 flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm text-sm font-medium text-slate-600">
-                                    <Ticket size={16} className="text-indigo-600" />
-                                    <span>Tiket Disimpan</span>
-                                </div>
-                            </div>
-                         )}
+                         <SuccessAnimation show={showSuccessAnim} />
 
                          <div className={`relative z-10 transition-opacity duration-300 ${showSuccessAnim ? 'opacity-0' : 'opacity-100'}`}>
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -410,10 +514,10 @@ const EventDetail: React.FC = () => {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-bold text-[#4A3E38]">
-                                            {isRegistered ? 'Kamu Sudah Terdaftar!' : (user ? 'Siap Bergabung?' : 'Pendaftaran Dibuka')}
+                                            {getRegTitle()}
                                         </h3>
                                         <p className="text-[#8C8178] text-sm">
-                                            {isRegistered ? 'Simpan tiketmu dan sampai jumpa di lokasi.' : (user ? 'Amankan kursimu sekarang sebelum penuh.' : 'Login akunmu untuk mendaftar event ini.')}
+                                            {getRegDesc()}
                                         </p>
                                     </div>
                                 </div>
@@ -458,113 +562,15 @@ const EventDetail: React.FC = () => {
                          </div>
                     </div>
 
-                    {/* Host Controls Section - Only visible to Host */}
-                    {isHost && (
-                         <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
-                             <div className="flex items-start gap-3">
-                                 <ShieldAlert className="text-red-500 shrink-0 mt-1" size={20} />
-                                 <div className="flex-1">
-                                     <h3 className="font-bold text-red-900 text-base mb-1">Area Host</h3>
-                                     <p className="text-sm text-red-700 mb-4">
-                                         Sebagai penyelenggara, Anda memiliki kontrol penuh atas event ini.
-                                     </p>
-                                     <div className="flex gap-3">
-                                         <Button 
-                                            onClick={handleDelete}
-                                            disabled={deleting}
-                                            variant="secondary" 
-                                            className="bg-white border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 h-10 text-sm"
-                                         >
-                                             {deleting ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
-                                             {deleting ? 'Menghapus...' : 'Hapus Event'}
-                                         </Button>
-                                     </div>
-                                 </div>
-                             </div>
-                         </div>
-                    )}
+                    <HostControls isHost={!!isHost} onDelete={handleDelete} deleting={deleting} />
 
-                    {/* Profile & Notification Settings Section - ONLY VISIBLE IF REGISTERED */}
-                    {isRegistered && !showSuccessAnim && (
-                        <div className="border-t border-slate-100 pt-8 animate-in slide-in-from-bottom-4 duration-500">
-                            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-2">
-                                        <BellRing size={20} className="text-slate-900" />
-                                        <h4 className="font-bold text-slate-900">Pengaturan Notifikasi</h4>
-                                    </div>
-                                    <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                        Sinkronisasi Aktif
-                                    </span>
-                                </div>
-                                
-                                <div className="space-y-3">
-                                    {/* Email Toggle */}
-                                    <div 
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={() => toggleNotification('email')}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                toggleNotification('email');
-                                            }
-                                        }}
-                                        className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer select-none ${
-                                            emailNotif 
-                                            ? 'bg-indigo-50/50 border-indigo-100' 
-                                            : 'bg-white border-slate-100 hover:border-slate-200'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${emailNotif ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
-                                                <Mail size={18} />
-                                            </div>
-                                            <div>
-                                                <p className={`text-sm font-bold transition-colors ${emailNotif ? 'text-indigo-900' : 'text-slate-600'}`}>Email Reminder</p>
-                                                <p className="text-xs text-slate-500">{emailNotif ? 'Pengingat dikirim H-1 Acara' : 'Notifikasi email dimatikan'}</p>
-                                            </div>
-                                        </div>
-                                        <div className={`w-12 h-7 rounded-full relative transition-colors duration-200 ${emailNotif ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-                                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200 ${emailNotif ? 'right-1' : 'left-1'}`}></div>
-                                        </div>
-                                    </div>
-
-                                    {/* Whatsapp Toggle */}
-                                    <div 
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={() => toggleNotification('wa')}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                toggleNotification('wa');
-                                            }
-                                        }}
-                                        className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer select-none ${
-                                            waNotif 
-                                            ? 'bg-green-50/50 border-green-100' 
-                                            : 'bg-white border-slate-100 hover:border-slate-200'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${waNotif ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-400'}`}>
-                                                <MessageCircle size={18} />
-                                            </div>
-                                            <div>
-                                                <p className={`text-sm font-bold transition-colors ${waNotif ? 'text-green-900' : 'text-slate-600'}`}>WhatsApp Info</p>
-                                                <p className="text-xs text-slate-500">{waNotif ? 'Update info via WhatsApp aktif' : 'Notifikasi WA dimatikan'}</p>
-                                            </div>
-                                        </div>
-                                        <div className={`w-12 h-7 rounded-full relative transition-colors duration-200 ${waNotif ? 'bg-green-600' : 'bg-slate-200'}`}>
-                                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200 ${waNotif ? 'right-1' : 'left-1'}`}></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <NotificationSettings 
+                        isRegistered={isRegistered}
+                        showSuccessAnim={showSuccessAnim}
+                        emailNotif={emailNotif}
+                        waNotif={waNotif}
+                        onToggle={toggleNotification}
+                    />
 
                     {/* Description */}
                     <div className="prose prose-slate prose-lg max-w-none pt-4">

@@ -154,31 +154,35 @@ export const AdminDashboard: React.FC = () => {
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Total User', value: stats.users, icon: Users, color: 'indigo', trend: '+12%' },
-                    { label: 'Total Event', value: stats.events, icon: Calendar, color: 'emerald', trend: '+5%' },
-                    { label: 'User Baru', value: stats.newToday, icon: Zap, color: 'amber', trend: stats.newToday > 0 ? 'Trending' : 'Stable' },
-                    { label: 'Pendaftaran', value: stats.activeRegistrations, icon: Activity, color: 'rose', trend: 'Live' }
-                ].map((stat, i) => (
-                    <Card key={i} className="p-6 border-none shadow-xl shadow-slate-200/40 hover:translate-y-[-4px] transition-all duration-300">
-                        <div className="flex justify-between items-start">
-                            <div className={`p-3 rounded-2xl ${
-                                stat.color === 'indigo' ? 'bg-indigo-50 text-indigo-600' :
-                                stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
-                                stat.color === 'amber' ? 'bg-amber-50 text-amber-600' :
-                                'bg-rose-50 text-rose-600'
-                            }`}>
-                                <stat.icon size={24} />
+                    { id: 'total-users', label: 'Total User', value: stats.users, icon: Users, color: 'indigo', trend: '+12%' },
+                    { id: 'total-events', label: 'Total Event', value: stats.events, icon: Calendar, color: 'emerald', trend: '+5%' },
+                    { id: 'new-users', label: 'User Baru', value: stats.newToday, icon: Zap, color: 'amber', trend: stats.newToday > 0 ? 'Trending' : 'Stable' },
+                    { id: 'registrations', label: 'Pendaftaran', value: stats.activeRegistrations, icon: Activity, color: 'rose', trend: 'Live' }
+                ].map((stat) => {
+                    const colorClasses: Record<string, string> = {
+                        indigo: 'bg-indigo-50 text-indigo-600',
+                        emerald: 'bg-emerald-50 text-emerald-600',
+                        amber: 'bg-amber-50 text-amber-600',
+                        rose: 'bg-rose-50 text-rose-600'
+                    };
+                    
+                    return (
+                        <Card key={stat.id} className="p-6 border-none shadow-xl shadow-slate-200/40 hover:translate-y-[-4px] transition-all duration-300">
+                            <div className="flex justify-between items-start">
+                                <div className={`p-3 rounded-2xl ${colorClasses[stat.color] || colorClasses.indigo}`}>
+                                    <stat.icon size={24} />
+                                </div>
+                                <span className="text-[10px] font-black px-2 py-1 rounded-full bg-slate-100 text-slate-500 uppercase tracking-tighter">
+                                    {stat.trend}
+                                </span>
                             </div>
-                            <span className="text-[10px] font-black px-2 py-1 rounded-full bg-slate-100 text-slate-500 uppercase tracking-tighter">
-                                {stat.trend}
-                            </span>
-                        </div>
-                        <div className="mt-6">
-                            <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
-                            <p className="text-slate-400 text-sm font-bold uppercase tracking-wider mt-1">{stat.label}</p>
-                        </div>
-                    </Card>
-                ))}
+                            <div className="mt-6">
+                                <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
+                                <p className="text-slate-400 text-sm font-bold uppercase tracking-wider mt-1">{stat.label}</p>
+                            </div>
+                        </Card>
+                    );
+                })}
             </div>
 
             {/* Main Content Areas */}
@@ -202,8 +206,8 @@ export const AdminDashboard: React.FC = () => {
                                 <p className="text-center py-12 text-slate-300 font-medium bg-slate-50/50 rounded-[32px] border-2 border-dashed border-slate-100">
                                     Belum ada aktivitas event terbaru.
                                 </p>
-                            ) : recentEvents.map((evt, i) => (
-                                <div key={i} className="flex gap-4 group">
+                            ) : recentEvents.map((evt) => (
+                                <div key={evt.id} className="flex gap-4 group">
                                     <div className="flex flex-col items-center">
                                         <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center border-4 border-white shadow-sm shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
                                             <Calendar size={18} />
@@ -260,8 +264,8 @@ export const AdminDashboard: React.FC = () => {
                             <Users size={20} className="text-slate-100" />
                         </div>
                         <div className="space-y-5">
-                            {recentUsers.map((u, i) => (
-                                <div key={i} className="flex items-center gap-4 group cursor-pointer hover:translate-x-1 transition-transform">
+                            {recentUsers.map((u) => (
+                                <div key={u.id} className="flex items-center gap-4 group cursor-pointer hover:translate-x-1 transition-transform">
                                     <div className="w-12 h-12 rounded-2xl bg-slate-50 border-2 border-white shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
                                         {u.avatar_url ? (
                                             <img src={u.avatar_url} className="w-full h-full object-cover" alt="" />
@@ -302,8 +306,8 @@ export const AdminDashboard: React.FC = () => {
                                 { name: 'Database API', status: 'Optimal', pulse: 'bg-emerald-500' },
                                 { name: 'Realtime Sync', status: 'Active', pulse: 'bg-emerald-500' },
                                 { name: 'Storage Engine', status: 'Healthy', pulse: 'bg-emerald-500' }
-                            ].map((m, i) => (
-                                <div key={i} className="bg-white p-4 rounded-[20px] border border-slate-100 flex justify-between items-center">
+                            ].map((m) => (
+                                <div key={m.name} className="bg-white p-4 rounded-[20px] border border-slate-100 flex justify-between items-center">
                                     <span className="text-xs text-slate-500 font-bold">{m.name}</span>
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black text-slate-900 uppercase tracking-tighter">{m.status}</span>

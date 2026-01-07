@@ -93,9 +93,6 @@ export const Badge: React.FC<{ status: string; className?: string }> = ({ status
     case 'Selesai':
       colors = "bg-orange-100 text-orange-700";
       break;
-    case 'Draft':
-      colors = "bg-slate-100 text-slate-600";
-      break;
   }
 
   return (
@@ -125,10 +122,13 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" 
+      <button 
+        type="button"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 w-full h-full border-none p-0 cursor-default" 
         onClick={onClose}
-      ></div>
+        onKeyDown={(e) => e.key === 'Enter' && onClose()}
+        aria-label="Close modal backdrop"
+      ></button>
       <Card 
         className={`relative w-full ${maxWidth} p-8 animate-in zoom-in-95 duration-200 shadow-2xl border-none`}
       >

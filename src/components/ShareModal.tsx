@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Facebook, Twitter, Linkedin, Mail, Share2, MessageCircle, Copy, Check } from 'lucide-react';
+import { X, Globe, Hash, Briefcase, Mail, Share2, MessageCircle, Copy, Check } from 'lucide-react';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -13,7 +13,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, title, url }) 
   const [copied, setCopied] = useState(false);
   
   // Use current window location if url is not provided
-  const shareUrl = url || window.location.href;
+  const shareUrl = url || globalThis.location.href;
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
 
@@ -33,26 +33,31 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, title, url }) 
 
   const socialActions = [
     {
+      id: 'facebook',
       label: 'Bagikan',
-      icon: Facebook,
-      action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, '_blank', 'noopener,noreferrer')
+      icon: Globe,
+      action: () => globalThis.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, '_blank', 'noopener,noreferrer')
     },
     {
+      id: 'twitter',
       label: 'Tweet',
-      icon: Twitter,
-      action: () => window.open(`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`, '_blank', 'noopener,noreferrer')
+      icon: Hash,
+      action: () => globalThis.open(`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`, '_blank', 'noopener,noreferrer')
     },
     {
+      id: 'linkedin',
       label: 'Pos',
-      icon: Linkedin,
-      action: () => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, '_blank', 'noopener,noreferrer')
+      icon: Briefcase,
+      action: () => globalThis.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, '_blank', 'noopener,noreferrer')
     },
     {
+      id: 'email',
       label: 'Surel',
       icon: Mail,
-      action: () => window.open(`mailto:?subject=${encodedTitle}&body=Cek event ini: ${encodedUrl}`, '_self')
+      action: () => globalThis.open(`mailto:?subject=${encodedTitle}&body=Cek event ini: ${encodedUrl}`, '_self')
     },
     {
+      id: 'native',
       label: 'Bagikan',
       icon: Share2,
       action: async () => {
@@ -72,17 +77,10 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, title, url }) 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in"
-        role="button"
-        tabIndex={-1}
+      <button 
+        type="button"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in w-full h-full border-none p-0 cursor-default"
         onClick={onClose}
-        onKeyDown={(e) => {
-            if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onClose();
-            }
-        }}
         aria-label="Close modal"
       />
 
@@ -112,9 +110,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, title, url }) 
         {/* Social Grid */}
         <div className="px-6 py-4">
             <div className="flex justify-between gap-2 mb-6">
-                {socialActions.map((item, idx) => (
+                {socialActions.map((item) => (
                     <button 
-                        key={idx}
+                        key={item.id}
                         onClick={item.action}
                         className="flex flex-col items-center gap-2 group min-w-[56px]"
                     >
@@ -130,7 +128,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, title, url }) 
 
             {/* SMS Option */}
             <button 
-                 onClick={() => window.open(`sms:?body=${encodedTitle} ${encodedUrl}`, '_blank', 'noopener,noreferrer')}
+                 onClick={() => globalThis.open(`sms:?body=${encodedTitle} ${encodedUrl}`, '_blank', 'noopener,noreferrer')}
                  className="flex flex-col items-center gap-2 group w-fit"
             >
                 <div className="w-12 h-12 rounded-2xl bg-slate-600 flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-slate-800 transition-all duration-300 shadow-md shadow-slate-200">

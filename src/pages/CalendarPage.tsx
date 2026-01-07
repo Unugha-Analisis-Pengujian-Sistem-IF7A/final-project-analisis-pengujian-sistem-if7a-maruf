@@ -5,11 +5,20 @@ import { Card } from '../components/UI';
 import { supabase } from '../services/supabaseClient';
 import EventPreviewModal from '../components/EventPreviewModal';
 
+interface CalendarEvent {
+  id: string;
+  title: string;
+  date: string;
+  time?: string;
+  is_public?: boolean;
+  [key: string]: unknown;
+}
+
 const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<Record<string, any>[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState<Record<string, any> | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   
   const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
@@ -32,7 +41,7 @@ const CalendarPage: React.FC = () => {
                 .lte('date', endDate);
             
             if (error) throw error;
-            setEvents(data || []);
+            setEvents((data as CalendarEvent[]) || []);
         } catch {
             // Ignore
         } finally {
@@ -89,9 +98,10 @@ const CalendarPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
         <EventPreviewModal 
+            key={selectedEvent?.id || 'modal'}
             isOpen={!!selectedEvent} 
             onClose={() => setSelectedEvent(null)} 
-            event={selectedEvent} 
+            event={selectedEvent || {}} 
         />
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
@@ -135,8 +145,10 @@ const CalendarPage: React.FC = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-7 bg-white flex-1 auto-rows-fr">
-                    {gridCells.map((cell, i) => (
-                        <div key={i} className={`min-h-[120px] border-b border-r border-slate-100 p-2 relative group transition-colors ${cell ? 'hover:bg-slate-50/50' : 'bg-slate-50/30'}`}>
+                    {gridCells.map((cell, index) => {
+                        const key = cell ? cell.dateStr : `empty-${index}`;
+                        return (
+                        <div key={key} className={`min-h-[120px] border-b border-r border-slate-100 p-2 relative group transition-colors ${cell ? 'hover:bg-slate-50/50' : 'bg-slate-50/30'}`}>
                             {cell && (
                                 <>
                                     <div className="flex justify-between items-start mb-2">
@@ -150,11 +162,10 @@ const CalendarPage: React.FC = () => {
                                     </div>
                                     
                                     <div className="space-y-1.5 overflow-y-auto max-h-[100px] custom-scrollbar">
-                                        {cell.events.map((ev: any) => (
-                                            <div 
+                                        {cell.events.map((ev: CalendarEvent) => (
+                                            <button 
                                                 key={ev.id} 
-                                                role="button"
-                                                tabIndex={0}
+                                                type="button" 
                                                 onClick={(e) => { e.stopPropagation(); setSelectedEvent(ev); }}
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter' || e.key === ' ') {
@@ -163,7 +174,7 @@ const CalendarPage: React.FC = () => {
                                                         setSelectedEvent(ev);
                                                     }
                                                 }}
-                                                className={`text-xs px-2 py-1.5 rounded-md truncate font-medium cursor-pointer transition-all hover:scale-[1.02] shadow-sm border border-transparent hover:border-black/5 ${
+                                                className={`w-full text-left text-xs px-2 py-1.5 rounded-md truncate font-medium cursor-pointer transition-all hover:scale-[1.02] shadow-sm border border-transparent hover:border-black/5 ${
                                                     ev.is_public 
                                                     ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white' 
                                                     : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
@@ -172,16 +183,15 @@ const CalendarPage: React.FC = () => {
                                             >
                                                 {ev.time && <span className="opacity-75 mr-1 text-[10px]">{ev.time.substring(0,5)}</span>}
                                                 {ev.title}
-                                            </div>
+                                            </button>
                                         ))}
                                     </div>
                                 </>
                             )}
                         </div>
-                    ))}
+                    );})}
                     
-                    {/* Fill remaining grid cells to make it look complete if last row is not full */}
-                    {[...new Array(7 - (gridCells.length % 7 || 7))].map((_, i) => (
+                    {Array.from({ length: 7 - (gridCells.length % 7 || 7) }).map((_, i) => (
                          <div key={`empty-end-${i}`} className="bg-slate-50/30 border-b border-r border-slate-100"></div>
                     ))}
                 </div>
