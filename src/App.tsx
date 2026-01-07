@@ -64,9 +64,11 @@ export const PublicNavbar = () => {
         
         {/* Left: Logo */}
         <Link to="/" className="flex-shrink-0 flex items-center gap-2 cursor-pointer group">
-           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-lg shadow-sm group-hover:scale-105 transition-transform">
-              U
-            </div>
+           <img 
+              src={`${import.meta.env.BASE_URL}favicon.png`}
+              alt="UNUGHA Logo" 
+              className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
+            />
             <span className="font-bold text-xl text-slate-800 tracking-tight hidden sm:block">UNUGHA Events</span>
         </Link>
 
@@ -266,9 +268,11 @@ export const DashboardNavbar = () => {
           {/* Left: Logo & Nav */}
           <div className="flex items-center gap-8">
              <Link to="/" className="flex-shrink-0 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-sm">
-                U
-              </div>
+              <img 
+                src={`${import.meta.env.BASE_URL}favicon.png`}
+                alt="UNUGHA Logo" 
+                className="w-8 h-8 object-contain"
+              />
             </Link>
 
             <div className="hidden md:flex items-center bg-slate-100/50 p-1 rounded-full border border-slate-200/50">
