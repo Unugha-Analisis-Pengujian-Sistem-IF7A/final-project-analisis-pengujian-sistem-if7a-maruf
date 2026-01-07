@@ -22,7 +22,8 @@ interface Event {
   is_public: boolean;
   price: number;
   status?: string;
-  organizations?: { id: string; name: string; image_url: string | null } | null;
+  max_attendees?: number;
+  registered_count?: number;
 }
 
 const Discover: React.FC = () => {
@@ -44,25 +45,50 @@ const Discover: React.FC = () => {
   useEffect(() => {
       const fetchEvents = async () => {
           setLoading(true);
-          let query = supabase
-              .from('events')
-              .select('*, organizations (id, name, image_url)')
-              .eq('is_public', true)
-              .order('date', { ascending: true });
+          try {
+              let query = supabase
+                  .from('events')
+                  .select('*')
+                  .order('date', { ascending: true });
 
-          if (filter !== 'Semua') {
-              query = query.eq('type', filter);
-          }
+              if (filter !== 'Semua') {
+                  query = query.eq('type', filter);
+              }
 
-          if (search) {
-              query = query.ilike('title', `%${search}%`);
-          }
+              if (search) {
+                  query = query.ilike('title', `%${search}%`);
+              }
 
-          const { data, error } = await query;
-          if (!error && data) {
-              setEvents(data);
+              const { data: eventsData, error } = await query;
+              
+              if (error) {
+                  console.error("Error fetching events:", error);
+                  // Optional: handle error state
+              } else if (eventsData) {
+                  // Fetch registration counts for these events
+                  const eventIds = eventsData.map(e => e.id);
+                  const { data: regCounts } = await supabase
+                      .from('registrations')
+                      .select('event_id')
+                      .in('event_id', eventIds);
+                  
+                  const countsMap: Record<string, number> = {};
+                  regCounts?.forEach(r => {
+                      countsMap[r.event_id] = (countsMap[r.event_id] || 0) + 1;
+                  });
+
+                  const enrichedEvents = eventsData.map(e => ({
+                      ...e,
+                      registered_count: countsMap[e.id] || 0
+                  }));
+
+                  setEvents(enrichedEvents);
+              }
+          } catch (err) {
+              console.error("Unexpected error in fetchEvents:", err);
+          } finally {
+              setLoading(false);
           }
-          setLoading(false);
       };
 
       fetchEvents();
@@ -79,7 +105,7 @@ const Discover: React.FC = () => {
         {/* Search Header */}
         <div className="relative mb-12 text-center py-10">
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Temukan Event Seru</h1>
-            <p className="text-slate-500 mb-8">Cari berdasarkan nama, kategori, atau organisasi.</p>
+            <p className="text-slate-500 mb-8">Cari berdasarkan nama, kategori, atau tipe event.</p>
             
             <div className="max-w-2xl mx-auto relative">
                 <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -149,7 +175,16 @@ const Discover: React.FC = () => {
                                     <div className="flex items-center gap-2"><MapPin size={16} className="text-indigo-500" /> {event.location}</div>
                                 </div>
                                 <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
-                                    <span className="font-bold text-indigo-600">{event.status || 'Terbuka'}</span>
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-indigo-600">{event.status || 'Terbuka'}</span>
+                                        {event.max_attendees && (
+                                            <span className={`text-[10px] font-bold ${event.max_attendees - (event.registered_count || 0) <= 5 ? 'text-red-500' : 'text-slate-400'}`}>
+                                                {event.max_attendees - (event.registered_count || 0) <= 0 
+                                                    ? 'KUOTA PENUH' 
+                                                    : `${event.max_attendees - (event.registered_count || 0)} Kuota Tersisa`}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className="text-xs text-slate-400">Klik untuk Preview →</span>
                                 </div>
                             </div>

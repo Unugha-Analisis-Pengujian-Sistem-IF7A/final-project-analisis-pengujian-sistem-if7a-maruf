@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { 
   Plus, 
   Bell, 
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from './components/UI';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import { supabase } from './services/supabaseClient';
 import { Notification as NotificationType } from './types';
 import { Footer } from './components/Footer';
@@ -238,7 +239,9 @@ export const DashboardNavbar = () => {
                      window.focus();
                      if (newNotif.action_url) {
                         if (newNotif.action_url.startsWith('http')) window.open(newNotif.action_url, '_blank', 'noopener,noreferrer');
-                        else window.location.hash = '#' + newNotif.action_url;
+                     else {
+                        navigate(newNotif.action_url);
+                     }
                      }
                      n.close();
                  };
@@ -253,7 +256,7 @@ export const DashboardNavbar = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, navigate]);
 
   const markAsRead = async (id: string, actionUrl?: string) => {
       // Optimistic update
@@ -335,8 +338,8 @@ export const DashboardNavbar = () => {
               </Link>
               
               {role === 'admin' && (
-                <Link to="/admin/users">
-                   <div className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive('/admin/users') ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                <Link to="/users">
+                   <div className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive('/users') ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                      Manajemen User
                    </div>
                 </Link>
@@ -362,8 +365,8 @@ export const DashboardNavbar = () => {
           {/* Right: User & Actions */}
           <div className="flex items-center gap-4">
             
-            {/* Show Create Button ONLY if NOT participant */}
-            {role !== 'participant' && (
+            {/* Show Create Button ONLY if ADMIN */}
+            {role === 'admin' && (
               <Link to="/create-event">
                 <button className="hidden sm:flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-lg shadow-indigo-500/20">
                   <Plus size={16} />
@@ -502,7 +505,7 @@ export const DashboardNavbar = () => {
 
 // --- Layout Wrapper ---
 
-const AppLayout = ({ children, type = 'public' }: { children?: React.ReactNode, type?: 'public' | 'dashboard' | 'auth' }) => {
+const AppLayout = ({ type = 'public' }: { type?: 'public' | 'dashboard' | 'auth' }) => {
   const { user } = useAuth();
   const location = useLocation();
 
@@ -522,7 +525,7 @@ const AppLayout = ({ children, type = 'public' }: { children?: React.ReactNode, 
       
       {/* Padding adjustment: Public navbar is fixed (needs pt-20), Dashboard is sticky (needs no padding) */}
       <main className={`flex-grow ${effectiveType === 'public' ? 'pt-20' : ''} ${effectiveType === 'auth' ? 'flex items-center justify-center p-4' : ''}`}>
-        {children}
+        <Outlet />
       </main>
 
       {effectiveType === 'public' && (
@@ -537,30 +540,33 @@ const AppLayout = ({ children, type = 'public' }: { children?: React.ReactNode, 
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<AppLayout type="public"><Landing /></AppLayout>} />
-          <Route path="/login" element={<AppLayout type="auth"><Login /></AppLayout>} />
-          <Route path="/admin-login" element={<AppLayout type="auth"><Login adminOnly /></AppLayout>} />
-          
-          {/* Publicly accessible pages */}
-          <Route path="/discover" element={<AppLayout type="public"><Discover /></AppLayout>} />
-          <Route path="/event/:id" element={<AppLayout type="public"><EventDetail /></AppLayout>} />
-          
+      <ToastProvider>
+        <Router basename={import.meta.env.BASE_URL}>
+          <Routes>
+            {/* Public / Landing Layout */}
+            <Route element={<AppLayout type="public" />}>
+              <Route path="/" element={<Landing />} />
+              <Route path="/discover" element={<Discover />} />
+              <Route path="/event/:id" element={<EventDetail />} />
+            </Route>
 
-          
-          {/* Protected/Dashboard Routes */}
-          {/* Calendar is now Dashboard only */}
-          <Route path="/calendar" element={<AppLayout type="dashboard"><CalendarPage /></AppLayout>} />
-          
-          <Route path="/dashboard" element={<AppLayout type="dashboard"><Dashboard /></AppLayout>} />
-          <Route path="/create-event" element={<AppLayout type="dashboard"><CreateEvent /></AppLayout>} />
+            {/* Auth Layout */}
+            <Route element={<AppLayout type="auth" />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin-login" element={<Login adminOnly />} />
+            </Route>
 
-          <Route path="/settings" element={<AppLayout type="dashboard"><ProfileSettings /></AppLayout>} />
-
-          <Route path="/admin/users" element={<AppLayout type="dashboard"><UserManagement /></AppLayout>} />
-        </Routes>
-      </Router>
+            {/* Dashboard Layout */}
+            <Route element={<AppLayout type="dashboard" />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/create-event" element={<CreateEvent />} />
+              <Route path="/settings" element={<ProfileSettings />} />
+              <Route path="/users" element={<UserManagement />} />
+            </Route>
+          </Routes>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 };

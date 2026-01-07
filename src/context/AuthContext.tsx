@@ -1,16 +1,14 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, getErrorMessage } from '../services/supabaseClient';
+import { supabase } from '../services/supabaseClient';
 import { Session, User } from '@supabase/supabase-js';
 
-export type UserRole = 'admin' | 'organizer' | 'participant';
+export type UserRole = 'admin' | 'participant';
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   role: UserRole | null;
   loading: boolean;
-  error: string | null;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -22,62 +20,48 @@ export const AuthProvider = ({ children }: { children?: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
-      try {
-          const { data, error } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', userId)
-              .single();
-          
-          if (data) {
-              setRole(data.role as UserRole);
-          } else {
-              // Fallback default if profile missing
-              setRole('participant');
-          }
-      } catch {
-          // Ignore
-          setRole('participant');
+    // Add a 5s timeout to profile fetch
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 5000));
+    
+    try {
+      const response = await Promise.race([
+        supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single(),
+        timeout
+      ]) as { data: { role: string } | null; error: Error | null };
+      
+      const { data, error: profileError } = response;
+      if (profileError) throw profileError;
+
+      if (data) {
+        setRole(data.role as UserRole);
+      } else {
+        setRole('participant');
       }
+    } catch (err) {
+      console.error("Profile fetch error:", err);
+      setRole('participant'); // Default fallback
+    }
   };
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        // Check active session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-            await fetchProfile(session.user.id);
-        }
-      } catch (err: any) {
-        // Ignore
-        setError(getErrorMessage(err));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-
-    // Listen for changes
+    // onAuthStateChange fires on mount with current session
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
       
-      if (session?.user) {
-          await fetchProfile(session.user.id);
+      if (currentSession?.user) {
+        setLoading(true);
+        await fetchProfile(currentSession.user.id);
       } else {
-          setRole(null);
+        setRole(null);
       }
       
       setLoading(false);
@@ -94,7 +78,7 @@ export const AuthProvider = ({ children }: { children?: React.ReactNode }) => {
   };
 
   const refreshProfile = async () => {
-      if (user) await fetchProfile(user.id);
+    if (user) await fetchProfile(user.id);
   };
 
   const value = {
@@ -102,7 +86,6 @@ export const AuthProvider = ({ children }: { children?: React.ReactNode }) => {
     user,
     role,
     loading,
-    error,
     signOut,
     refreshProfile
   };

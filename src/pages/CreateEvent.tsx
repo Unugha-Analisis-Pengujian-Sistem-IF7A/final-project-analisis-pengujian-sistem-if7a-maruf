@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Upload, Calendar, MapPin, Type, Sparkles, Check, Info, 
-  Image as ImageIcon, X, Loader2, Ticket, Users, FileCheck,
+  Upload, Calendar, MapPin, Type, Sparkles, Check, 
+  Image as ImageIcon, Loader2, Ticket, Users, FileCheck,
   ChevronDown, Shuffle, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Button } from '../components/UI';
 import { supabase, getErrorMessage } from '../services/supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 // --- HELPERS ---
 const DAYS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
@@ -46,17 +47,10 @@ const DEFAULT_COVERS = [
 
 const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
   
+  const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // --- TOAST STATE ---
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-      setToast({ message, type });
-      setTimeout(() => setToast(null), 3000);
-  };
   
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
@@ -122,13 +116,17 @@ const CreateEvent: React.FC = () => {
 
   // --- EXISTING LOGIC ---
   
-  // Check Role Permission
+  // Check Auth & Role
   useEffect(() => {
-    if (user && role === 'participant') {
-        showToast("Akses ditolak. User umum (Participant) tidak dapat membuat event.", 'error');
-        setTimeout(() => navigate('/dashboard'), 2000);
+    if (!loading) {
+        if (!user) {
+            navigate('/login');
+        } else if (role !== 'admin') {
+            showToast("Akses ditolak. Hanya Admin yang dapat membuat event.", 'error');
+            setTimeout(() => navigate('/dashboard'), 2000);
+        }
     }
-  }, [user, role, navigate]);
+  }, [user, role, loading, navigate, showToast]);
 
   // Initial Random Image
   useEffect(() => {
@@ -172,10 +170,6 @@ const CreateEvent: React.FC = () => {
         navigate('/login');
         return;
     }
-    if (role === 'participant') {
-        showToast("Akses ditolak.", 'error');
-        return;
-    }
 
     if (!title || !startDate || !startTime) {
         showToast("Mohon lengkapi Judul, Tanggal Mulai, dan Waktu Mulai.", 'error');
@@ -213,7 +207,7 @@ const CreateEvent: React.FC = () => {
             location: location,
             description: description,
             type: type,
-            is_public: !requireApproval, 
+            is_public: true, // Biar selalu muncul di Explore
             host_id: user.id,
             image_url: imagePath,
             status: 'Terbuka',
@@ -613,17 +607,6 @@ const CreateEvent: React.FC = () => {
         </div>
       </div>
       
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-4 bg-white/90 backdrop-blur-xl border border-slate-200 shadow-2xl rounded-full z-[100] animate-in slide-in-from-top-5 fade-in duration-300">
-            {toast.type === 'success' && <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><Check size={18} /></div>}
-            {toast.type === 'error' && <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center"><X size={18} /></div>}
-            {toast.type === 'info' && <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><Info size={18} /></div>}
-            
-            <p className="text-slate-700 font-bold text-sm pr-2">{toast.message}</p>
-        </div>
-      )}
-
     </div>
   );
 };

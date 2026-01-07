@@ -23,11 +23,13 @@ import {
 import { Button } from '../components/UI';
 import { supabase, getStorageUrl, getErrorMessage } from '../services/supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import ShareModal from '../components/ShareModal';
 
 const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   
   const [event, setEvent] = useState<any>(null);
@@ -110,7 +112,7 @@ const EventDetail: React.FC = () => {
 
       } catch (err: any) {
           const msg = getErrorMessage(err);
-          alert('Gagal mendaftar: ' + msg);
+          showToast('Gagal mendaftar: ' + msg, 'error');
       } finally {
           setRegistering(false);
       }
@@ -119,7 +121,7 @@ const EventDetail: React.FC = () => {
   const handleCopyLink = () => {
       const url = window.location.href;
       navigator.clipboard.writeText(url);
-      alert('Tautan berhasil disalin!');
+      showToast('Tautan berhasil disalin!', 'success');
   };
 
   const toggleNotification = (type: 'email' | 'wa') => {
@@ -132,7 +134,7 @@ const EventDetail: React.FC = () => {
           const msg = type === 'email' 
             ? `Berhasil! Pengingat email telah dijadwalkan ke ${user?.email}` 
             : `Notifikasi WhatsApp aktif. Pesan akan dikirim ke nomor terdaftar Anda.`;
-          alert(msg);
+          showToast(msg, 'success');
       }
   };
 
@@ -146,7 +148,7 @@ const EventDetail: React.FC = () => {
         // Handle YYYY-MM-DD or ISO strings
         const eventDate = new Date(event.date);
         if (Number.isNaN(eventDate.getTime())) {
-            alert("Format tanggal tidak valid.");
+            showToast("Format tanggal tidak valid.", 'error');
             return;
         }
 
@@ -174,7 +176,7 @@ const EventDetail: React.FC = () => {
         
         window.open(gCalUrl, '_blank', 'noopener,noreferrer');
     } catch {
-        alert("Gagal membuka kalender.");
+        showToast("Gagal membuka kalender.", 'error');
     }
   };
 
@@ -195,7 +197,7 @@ const EventDetail: React.FC = () => {
       if (isOnlineLink) {
           if (loc.includes('zoom')) window.open('https://zoom.us/join', '_blank', 'noopener,noreferrer');
           else if (loc.includes('meet')) window.open('https://meet.google.com/', '_blank', 'noopener,noreferrer');
-          else alert('Link meeting spesifik belum tersedia. Silakan cek deskripsi acara atau email Anda.');
+          else showToast('Link meeting spesifik belum tersedia.', 'info');
       } else {
           // 3. Offline Location -> Google Maps
           window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`, '_blank', 'noopener,noreferrer');
@@ -213,10 +215,10 @@ const EventDetail: React.FC = () => {
           const { error } = await supabase.from('events').delete().eq('id', id);
           if (error) throw error;
           
-          alert("Event berhasil dihapus.");
+          showToast("Event berhasil dihapus.", 'success');
           navigate('/dashboard');
       } catch (e: any) {
-          alert("Gagal menghapus event: " + getErrorMessage(e));
+          showToast("Gagal menghapus event: " + getErrorMessage(e), 'error');
           setDeleting(false);
       }
   };
@@ -289,14 +291,14 @@ const EventDetail: React.FC = () => {
 
                         <div className="hidden lg:block mt-6">
                              <div className="flex flex-col gap-2 text-sm text-slate-500">
-                                <p className="font-medium text-slate-900">Diselenggarakan Oleh:</p>
+                                <p className="font-medium text-slate-900">Kategori Event:</p>
                                 <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
                                     <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                                        {event.type?.charAt(0) || 'U'}
+                                        {event.type?.charAt(0) || 'E'}
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-900">{event.type || 'Organisasi Kampus'}</p>
-                                        <p className="text-xs text-slate-500">Verified Organizer</p>
+                                        <p className="font-bold text-slate-900">{event.type || 'Umum'}</p>
+                                        <p className="text-xs text-slate-500">Event Terverifikasi</p>
                                     </div>
                                 </div>
                              </div>

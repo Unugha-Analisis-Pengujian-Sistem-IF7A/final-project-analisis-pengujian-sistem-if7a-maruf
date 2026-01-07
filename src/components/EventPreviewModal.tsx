@@ -265,21 +265,11 @@ const EventPreviewModal: React.FC<EventPreviewModalProps> = ({ isOpen, onClose, 
                  </div>
              </div>
 
-             {/* 2. Title & Organizer */}
              <div className="mb-8">
                 <h2 className="text-[28px] font-bold text-slate-900 leading-tight mb-4 tracking-tight">{event.title}</h2>
                 
-                <div className="flex items-center gap-3">
-                     <div className="w-7 h-7 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center overflow-hidden shrink-0">
-                         <img src={`https://ui-avatars.com/api/?name=${event.type || 'U'}&background=random`} alt="" className="w-full h-full object-cover" />
-                     </div>
-                     <p className="text-slate-600 text-sm font-medium truncate">
-                        Diselenggarakan oleh <span className="text-slate-900 font-bold">{event.type || 'Panitia Kampus'}</span>
-                     </p>
-                </div>
-
                 <div className="flex flex-wrap gap-4 mt-4 text-xs font-medium text-slate-400">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">#{event.type?.split(' ')[0] || 'Event'}</span>
+                    <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 font-bold uppercase tracking-wider">#{event.type || 'Event'}</span>
                 </div>
              </div>
 

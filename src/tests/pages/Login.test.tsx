@@ -5,6 +5,14 @@ import Login from '@/pages/Login';
 import { MemoryRouter } from 'react-router-dom';
 import { supabase } from '@/services/supabaseClient';
 
+// Mock useToast
+const mockShowToast = vi.fn();
+vi.mock('@/context/ToastContext', () => ({
+  useToast: () => ({
+    showToast: mockShowToast,
+  }),
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -89,7 +97,7 @@ describe('Login Page', () => {
         fireEvent.click(screen.getByText('Masuk Sekarang'));
     });
 
-    await waitFor(() => expect(screen.getByText('GAGAL LOGIN')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/GAGAL LOGIN/i)).toBeInTheDocument());
     expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
   });
 
@@ -113,8 +121,8 @@ describe('Login Page', () => {
      vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({ data: { user: { id: '123' } }, error: null } as any);
      
      // Mock profile check returning "participant"
-     const mockSingle = vi.fn().mockResolvedValue({ data: { role: 'participant' } });
-     const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
+     const mockMaybeSingle = vi.fn().mockResolvedValue({ data: { role: 'participant' } });
+     const mockEq = vi.fn().mockReturnValue({ maybeSingle: mockMaybeSingle });
      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
      // eslint-disable-next-line @typescript-eslint/no-explicit-any
      vi.mocked(supabase.from).mockReturnValue({ select: mockSelect } as any);
@@ -168,7 +176,6 @@ describe('Login Page', () => {
   it('handles registration success', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(supabase.auth.signUp).mockResolvedValue({ data: { user: { id: '456' } }, error: null } as any);
-    window.alert = vi.fn();
 
     await act(async () => {
         render(<MemoryRouter><Login /></MemoryRouter>);
@@ -185,7 +192,7 @@ describe('Login Page', () => {
     });
 
     await waitFor(() => expect(supabase.auth.signUp).toHaveBeenCalled());
-    expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Registrasi berhasil'));
+    expect(mockShowToast).toHaveBeenCalledWith(expect.stringContaining('cek email Anda untuk verifikasi akun'), 'success');
   });
 
   it('handles registration failure', async () => {
@@ -206,7 +213,7 @@ describe('Login Page', () => {
         fireEvent.click(screen.getByText('Daftar Sekarang', { selector: 'button' }));
     });
 
-    await waitFor(() => expect(screen.getByText('GAGAL LOGIN')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/GAGAL LOGIN/i)).toBeInTheDocument());
     expect(screen.getByText('Sign up failed')).toBeInTheDocument();
   });
 
@@ -243,16 +250,21 @@ describe('Login Page', () => {
         render(<MemoryRouter><Login /></MemoryRouter>);
     });
 
-    const wifiOff = document.querySelector('.lucide-wifi-off');
-    expect(wifiOff).toBeInTheDocument();
+    await waitFor(() => {
+        const wifiOff = document.querySelector('.lucide-wifi-off');
+        expect(wifiOff).toBeInTheDocument();
+    });
   });
 
   it('renders register mode via query params', async () => {
-    window.history.pushState({}, '', '/login?mode=register');
+    vi.stubGlobal('location', { search: '?mode=register' });
+
     await act(async () => {
         render(<MemoryRouter initialEntries={['/login?mode=register']}><Login /></MemoryRouter>);
     });
     expect(screen.getByText('Daftar Akun Baru')).toBeInTheDocument();
+
+    vi.unstubAllGlobals();
   });
 
   it('handles reset password failure', async () => {
@@ -268,7 +280,7 @@ describe('Login Page', () => {
         fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'fail@test.com' } });
         fireEvent.click(screen.getByText('Kirim Link Reset'));
     });
-    await waitFor(() => expect(screen.getByText('Reset failed')).toBeInTheDocument());
+    expect(await screen.findByText('Reset failed')).toBeInTheDocument();
   });
 
   it('handles connection check exception', async () => {
@@ -279,6 +291,8 @@ describe('Login Page', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     await act(async () => { render(<MemoryRouter><Login /></MemoryRouter>); });
-    expect(document.querySelector('.lucide-wifi-off')).toBeInTheDocument();
+    await waitFor(() => {
+        expect(document.querySelector('.lucide-wifi-off')).toBeInTheDocument();
+    });
   });
 });

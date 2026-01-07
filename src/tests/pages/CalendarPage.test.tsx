@@ -7,11 +7,14 @@ import { supabase } from '@/services/supabaseClient';
 
 const { createMockQuery } = vi.hoisted(() => {
     return {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         createMockQuery: (data: any = [], error: any = null) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const query: any = {
                 select: vi.fn().mockReturnThis(),
                 gte: vi.fn().mockReturnThis(),
                 lte: vi.fn().mockReturnThis(),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 then: (onfulfilled?: (value: any) => any) => {
                      return Promise.resolve({ data, error }).then(onfulfilled);
                 }
@@ -28,9 +31,16 @@ vi.mock('@/services/supabaseClient', () => ({
     getStorageUrl: vi.fn((path) => path ? path : null),
 }));
 
+// Mock ToastContext
+const mockShowToast = vi.fn();
+vi.mock('@/context/ToastContext', () => ({
+    useToast: () => ({ showToast: mockShowToast }),
+}));
+
 // Mock EventPreviewModal since it's tested separately
 vi.mock('@/components/EventPreviewModal', () => ({
     __esModule: true,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     default: ({ isOpen, onClose, event }: any) => isOpen ? (
         <div data-testid="event-modal">
             <button data-testid="modal-close" onClick={onClose}>Close</button>
@@ -42,6 +52,7 @@ vi.mock('@/components/EventPreviewModal', () => ({
 // Also mock relative path to be safe
 vi.mock('../../components/EventPreviewModal', () => ({
     __esModule: true,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     default: ({ isOpen, onClose, event }: any) => isOpen ? (
         <div data-testid="event-modal">
             <button data-testid="modal-close" onClick={onClose}>Close</button>
@@ -67,11 +78,6 @@ describe('CalendarPage', () => {
         expect(screen.getByText('Kalender Kegiatan')).toBeInTheDocument();
         const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
         days.forEach(d => expect(screen.getByText(d)).toBeInTheDocument());
-        
-        // Month name should be present (e.g., "Januari 2026")
-        // Since we can't easily predict "current date" in test unless mocked, we assume it renders *something*
-        // But we can check for current month if we didn't mock Date.
-        // Better to rely on "Jadwal event kampus" text.
     });
 
     it('fetches and displays events', async () => {
@@ -89,6 +95,7 @@ describe('CalendarPage', () => {
         ];
 
         const mockQuery = createMockQuery(mockEvents);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockReturnValue(mockQuery as any);
 
         await act(async () => {
@@ -107,6 +114,7 @@ describe('CalendarPage', () => {
 
     it('navigates to previous and next month', async () => {
         const mockQuery = createMockQuery([]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockReturnValue(mockQuery as any);
 
         await act(async () => {
@@ -152,6 +160,7 @@ describe('CalendarPage', () => {
             }
         ];
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockImplementation(() => createMockQuery(mockEvents) as any);
 
         await act(async () => {

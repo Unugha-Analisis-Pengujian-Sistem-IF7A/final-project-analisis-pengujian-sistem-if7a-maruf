@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { DashboardNavbar } from '../../App';
 import { supabase } from '@/services/supabaseClient';
@@ -42,7 +42,16 @@ describe('DashboardNavbar', () => {
             role: 'organizer',
             signOut: vi.fn(),
         });
-        
+
+        vi.spyOn(console, 'log').mockImplementation(() => {});
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    beforeEach(() => {
         // Default Supabase mock for notifications
         vi.mocked(supabase.from).mockImplementation((table) => {
             if (table === 'notifications') {
@@ -90,10 +99,14 @@ describe('DashboardNavbar', () => {
         });
 
         const searchInput = screen.getByPlaceholderText('Cari event...');
-        fireEvent.change(searchInput, { target: { value: 'Concert' } });
+        await act(async () => {
+            fireEvent.change(searchInput, { target: { value: 'Concert' } });
+        });
         expect(searchInput).toHaveValue('Concert');
         
-        fireEvent.keyDown(searchInput, { key: 'Enter', code: 'Enter' });
+        await act(async () => {
+            fireEvent.keyDown(searchInput, { key: 'Enter', code: 'Enter' });
+        });
     });
 
     it('opens and closes notification dropdown', async () => {

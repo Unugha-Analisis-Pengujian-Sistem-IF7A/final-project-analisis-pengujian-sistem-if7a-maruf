@@ -3,8 +3,8 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Login from '@/pages/Login';
-
 import { AuthProvider } from '@/context/AuthContext';
+import { ToastProvider } from '@/context/ToastContext';
 import { supabase } from '@/services/supabaseClient';
 
 // --- Mocks ---
@@ -26,9 +26,6 @@ vi.mock('@/services/supabaseClient', () => ({
   },
 }));
 
-// We need to spy on the real AuthProvider or use the real one but mock the backend calls it makes.
-// Here we use the REAL AuthProvider but mocked Supabase to simulate the INTEGRATION between AuthContext and Pages.
-
 describe('Integration Test: Authentication Flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -48,13 +45,6 @@ describe('Integration Test: Authentication Flow', () => {
       error: null
     });
 
-    // Mock getSession to return user AFTER login (for AuthContext to update)
-    // In a real integration test, onAuthStateChange would trigger, 
-    // but in mocked environment we might need to rely on the manual call or successful promise resolution.
-    
-    // Render the App-like structure with Routing
-    // We use the REAL AuthProvider to test the integration of Context + Page + Logic
-    // Capture the auth state change listener
     // Capture the auth state change listener
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let authListener: ((event: string, session: any) => void) | undefined;
@@ -66,12 +56,14 @@ describe('Integration Test: Authentication Flow', () => {
     await act(async () => {
         render(
           <AuthProvider>
-            <MemoryRouter initialEntries={['/login']}>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/dashboard" element={<div>Dashboard Page</div>} />
-              </Routes>
-            </MemoryRouter>
+            <ToastProvider>
+              <MemoryRouter initialEntries={['/login']}>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/dashboard" element={<div>Dashboard Page</div>} />
+                </Routes>
+              </MemoryRouter>
+            </ToastProvider>
           </AuthProvider>
         );
     });
@@ -82,14 +74,15 @@ describe('Integration Test: Authentication Flow', () => {
     // 3. User Interaction: Fill Form
     const emailInput = screen.getByPlaceholderText(/mahasiswa@unugha.ac.id/i);
     const passwordInput = screen.getByPlaceholderText(/••••••••/i);
-    const loginButton = screen.getByRole('button', { name: /Masuk Sekarang/i });
+    // Use partial match because of potential icons or extra text
+    const loginButton = screen.getByText('Masuk Sekarang').closest('button');
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
     // 4. Submit
     await act(async () => {
-      fireEvent.click(loginButton);
+      fireEvent.click(loginButton!);
     });
 
     // 5. Verify API Call
@@ -99,7 +92,6 @@ describe('Integration Test: Authentication Flow', () => {
     });
 
     // 6. Simulate Auth State Change (Integration Step)
-    // In real app, Supabase client triggers this. In test, we manually trigger it to update Context.
     if (authListener) {
         await act(async () => {
             authListener('SIGNED_IN', mockSession);
@@ -108,7 +100,7 @@ describe('Integration Test: Authentication Flow', () => {
 
     // 7. Verify Redirect to Dashboard
     await waitFor(() => {
-      expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();
+      expect(screen.getByText(/Dashboard Page/i)).toBeInTheDocument();
       expect(screen.queryByText(/Selamat Datang Kembali/i)).not.toBeInTheDocument();
     });
   });

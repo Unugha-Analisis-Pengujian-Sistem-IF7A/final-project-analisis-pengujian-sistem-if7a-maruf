@@ -19,28 +19,22 @@ const Dashboard: React.FC = () => {
   }, [loading, user, navigate]);
 
   if (loading) {
-      return (
-          <div className="min-h-screen flex items-center justify-center bg-slate-50">
-              <Loader2 className="animate-spin text-indigo-600" size={40} />
-          </div>
-      );
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
+        <Loader2 className="animate-spin text-indigo-600" size={48} />
+        <p className="text-slate-400 font-medium animate-pulse">Menyiapkan Dashboard...</p>
+      </div>
+    );
   }
 
-  // Render Dashboard Based on Role
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
-       {/* Greeting Header (Optional Global) */}
-       {/* <div className="mb-8">
-           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Dashboard Access: <span className="text-indigo-600">{role?.toUpperCase()}</span></p>
-       </div> */}
+  if (!user) return null;
 
-       {role === 'admin' ? (
-           <AdminDashboard />
-       ) : (
-           <ParticipantDashboard />
-       )}
-    </div>
-  );
+  // Render Dashboard Based on Role
+  if (role === 'admin') {
+    return <AdminDashboard />;
+  }
+
+  return <ParticipantDashboard />;
 };
 
 export default Dashboard;

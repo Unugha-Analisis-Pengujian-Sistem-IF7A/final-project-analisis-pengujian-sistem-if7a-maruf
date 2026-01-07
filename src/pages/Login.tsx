@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, Loader2, AlertTriangle, ArrowLeft, CheckCircle2, ShieldCheck, User, Wifi, WifiOff } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, AlertTriangle, ArrowLeft, CheckCircle2, ShieldCheck, User, Wifi, WifiOff, Eye, EyeOff } from 'lucide-react';
 import { Button, Input, Card } from '../components/UI';
 import { supabase, getErrorMessage } from '../services/supabaseClient';
+import { useToast } from '../context/ToastContext';
 
 interface LoginProps {
   adminOnly?: boolean;
@@ -11,6 +12,7 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ adminOnly = false }) => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   const initialMode = searchParams.get('mode') === 'register' && !adminOnly ? 'register' : 'login';
   
@@ -21,6 +23,7 @@ const Login: React.FC<LoginProps> = ({ adminOnly = false }) => {
   const [error, setError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
   const [isDbConnected, setIsDbConnected] = useState<boolean | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     checkConnection();
@@ -54,6 +57,10 @@ const Login: React.FC<LoginProps> = ({ adminOnly = false }) => {
             });
             
             if (error) {
+                // Tangani error email belum dikonfirmasi secara spesifik
+                if (error.message.toLowerCase().includes('email not confirmed')) {
+                    throw new Error('Email Anda belum terverifikasi. Silakan cek inbox email Anda untuk melakukan verifikasi.');
+                }
                 if (error.message === 'Invalid login credentials') {
                     throw new Error('Kredensial login salah atau akun belum terverifikasi.');
                 }
@@ -61,21 +68,30 @@ const Login: React.FC<LoginProps> = ({ adminOnly = false }) => {
             }
             
             if (data.user) {
-                // Check Role for Admin Login
+                // Check Role for Admin Login (logic tetap sama)
                 if (adminOnly) {
-                    const { data: profile } = await supabase
+                    const { data: profile, error: profileError } = await supabase
                         .from('profiles')
                         .select('role')
                         .eq('id', data.user.id)
-                        .single();
+                        .maybeSingle();
                     
-                    if (profile?.role !== 'admin') {
+                    if (profileError) {
                          await supabase.auth.signOut();
-                         throw new Error('AKSES DITOLAK: Akun Anda bukan Administrator.');
+                         throw new Error(`DATABASE ERROR: ${profileError.message}`);
+                    }
+
+                    if (!profile) {
+                         await supabase.auth.signOut();
+                         throw new Error('Data profil tidak ditemukan.');
+                    }
+
+                    if (profile.role !== 'admin') {
+                         await supabase.auth.signOut();
+                         throw new Error('Akses ditolak: Anda bukan Admin.');
                     }
                 }
 
-                // Redirect logic
                 navigate('/dashboard');
             }
         } 
@@ -91,17 +107,19 @@ const Login: React.FC<LoginProps> = ({ adminOnly = false }) => {
                 }
             });
             if (error) throw error;
-            alert('Registrasi berhasil! Silakan login.');
+            
+            // Pesan sukses diubah agar user tahu harus cek email
+            showToast('Registrasi berhasil! Silakan cek email Anda untuk verifikasi akun.', 'success');
             setMode('login');
         }
         else if (mode === 'forgot') {
             const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-                redirectTo: window.location.origin + '/#/settings', 
+                redirectTo: window.location.origin + import.meta.env.BASE_URL + 'settings', 
             });
             if (error) throw error;
             setResetSuccess(true);
         }
-    } catch (err: any) {
+    } catch (err: unknown) {
         setError(getErrorMessage(err));
     } finally {
         setIsLoading(false);
@@ -168,16 +186,26 @@ const Login: React.FC<LoginProps> = ({ adminOnly = false }) => {
                     />
                     
                     {mode !== 'forgot' && (
-                        <Input 
-                            id="password"
-                            type="password" 
-                            label="Password" 
-                            placeholder="••••••••" 
-                            icon={Lock} 
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <div className="relative">
+                            <Input 
+                                id="password"
+                                type={showPassword ? "text" : "password"} 
+                                label="Password" 
+                                placeholder="••••••••" 
+                                icon={Lock} 
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                className="pr-12"
+                            />
+                            <button 
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 bottom-[14px] text-slate-400 hover:text-indigo-600 transition-colors"
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
                     )}
 
                     {mode === 'login' && (

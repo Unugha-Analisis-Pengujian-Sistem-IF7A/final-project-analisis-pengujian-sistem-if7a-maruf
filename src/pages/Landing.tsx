@@ -1,150 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Users, Zap, Globe, Activity, Monitor, CheckCircle2, XCircle, AlertCircle, Database } from 'lucide-react';
+import { Calendar, Users, Zap, Globe, Activity, Monitor } from 'lucide-react';
 import { Button, Card } from '../components/UI';
-import { supabase, getErrorMessage } from '../services/supabaseClient';
 
 const Landing: React.FC = () => {
-  const [dbStatus, setDbStatus] = useState<{status: 'checking' | 'connected' | 'error' | 'warning', message: string}>({ status: 'checking', message: 'Checking connection...' });
-  const [showDebug, setShowDebug] = useState(false);
 
   // --- Typewriter Effect State ---
   const [loopNum, setLoopNum] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [text, setText] = useState('');
   const [delta, setDelta] = useState(150);
-  const toRotate = [ "di sini.", "sekarang.", "bersama UNUGHA.", "tanpa ribet." ];
-  const period = 2000;
 
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        // 1. Cek Auth Service (Ping sederhana)
-        // Jika Failed to fetch terjadi, biasanya berhenti di sini
-        const { error: authError } = await supabase.auth.getSession();
-        if (authError) throw authError;
-
-        // 2. Cek Database (Akses table events)
-        const { error: dbError, count } = await supabase
-            .from('events')
-            .select('*', { count: 'exact', head: true });
-
-        if (dbError) {
-            // Kode error 42P01 berarti table tidak ditemukan
-            if (dbError.code === '42P01') {
-                setDbStatus({ 
-                    status: 'warning', 
-                    message: 'Terhubung ke Supabase, namun table belum dibuat. Silakan pastikan migrations sudah dijalankan.' 
-                });
-            } else {
-                throw dbError;
-            }
-        } else {
-            setDbStatus({ 
-                status: 'connected', 
-                message: `Berhasil terhubung. Database siap digunakan (${count || 0} event ditemukan).` 
-            });
-        }
-      } catch (err: any) {
-        // Ignore
-        
-        // Deep extraction of error message
-        const msg = getErrorMessage(err);
-        
-        // Special mapping for landing page context
-        let displayMsg = msg;
-        if (msg.includes('Koneksi ke server gagal')) {
-            displayMsg = 'Supabase unreachable. Matikan AdBlocker atau periksa koneksi internet Anda. Pastikan URL Supabase di services/supabaseClient.ts sudah benar.';
-        }
-        
-        setDbStatus({ status: 'error', message: displayMsg });
-      }
-    };
-
-    checkConnection();
-  }, []);
 
   // --- Typewriter Logic ---
   useEffect(() => {
+    const toRotate = [ "di sini.", "sekarang.", "bersama UNUGHA.", "tanpa ribet." ];
+    const period = 2000;
+
+    const tick = () => {
+      const i = loopNum % toRotate.length;
+      const fullText = toRotate[i];
+      const updatedText = isDeleting 
+        ? fullText.substring(0, text.length - 1) 
+        : fullText.substring(0, text.length + 1);
+
+      setText(updatedText);
+
+      if (isDeleting) {
+        setDelta(prevDelta => prevDelta / 2);
+      }
+
+      if (!isDeleting && updatedText === fullText) {
+        setIsDeleting(true);
+        setDelta(period);
+      } else if (isDeleting && updatedText === '') {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+        setDelta(150);
+      } else if (!isDeleting && updatedText !== fullText) {
+        const randomBuffer = new Uint32Array(1);
+        crypto.getRandomValues(randomBuffer);
+        const randomFloat = randomBuffer[0] / 0xFFFFFFFF;
+        setDelta(150 - randomFloat * 50); 
+      }
+    };
+
     const ticker = setInterval(() => {
       tick();
     }, delta);
 
     return () => { clearInterval(ticker) };
-  }, [text, delta]);
-
-  const tick = () => {
-    const i = loopNum % toRotate.length;
-    const fullText = toRotate[i];
-    const updatedText = isDeleting 
-      ? fullText.substring(0, text.length - 1) 
-      : fullText.substring(0, text.length + 1);
-
-    setText(updatedText);
-
-    if (isDeleting) {
-      setDelta(prevDelta => prevDelta / 2);
-    }
-
-    if (!isDeleting && updatedText === fullText) {
-      setIsDeleting(true);
-      setDelta(period);
-    } else if (isDeleting && updatedText === '') {
-      setIsDeleting(false);
-      setLoopNum(loopNum + 1);
-      setDelta(150);
-    } else if (!isDeleting && updatedText !== fullText) {
-      const randomBuffer = new Uint32Array(1);
-      crypto.getRandomValues(randomBuffer);
-      const randomFloat = randomBuffer[0] / 0xFFFFFFFF;
-      setDelta(150 - randomFloat * 50); 
-    }
-  };
+  }, [text, delta, loopNum, isDeleting]);
 
   return (
     <div className="overflow-hidden relative">
-      {/* Connection Status Indicator (Floating Bottom Right) */}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
-          {showDebug && (
-             <div className="bg-slate-900 text-slate-200 p-4 rounded-xl text-xs font-mono shadow-2xl max-w-xs mb-2 animate-in slide-in-from-bottom-5 border border-slate-700">
-                <p className="font-bold text-white mb-2 border-b border-slate-700 pb-1 flex justify-between">
-                    System Diagnostic{" "}
-                    <button onClick={() => setShowDebug(false)} className="text-slate-500 hover:text-white">×</button>
-                </p>
-                <p>Status: <span className={
-                    dbStatus.status === 'connected' ? 'text-green-400' : 
-                    dbStatus.status === 'warning' ? 'text-yellow-400' : 
-                    dbStatus.status === 'error' ? 'text-red-400' : 'text-blue-400'
-                }>{dbStatus.status.toUpperCase()}</span></p>
-                <div className="mt-2 text-slate-400 leading-tight bg-black/40 p-2 rounded border border-slate-800 break-words">
-                    {dbStatus.message}
-                </div>
-
-             </div>
-          )}
-          
-          <button 
-            onClick={() => setShowDebug(!showDebug)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm shadow-lg backdrop-blur-md border transition-all duration-300 hover:scale-105 ${
-                dbStatus.status === 'connected' ? 'bg-green-500/90 text-white border-green-400' : 
-                dbStatus.status === 'warning' ? 'bg-yellow-500/90 text-white border-yellow-400' :
-                dbStatus.status === 'error' ? 'bg-red-500/90 text-white border-red-400' :
-                'bg-slate-800/90 text-white border-slate-600'
-            }`}
-          >
-             {dbStatus.status === 'connected' && <CheckCircle2 size={16} />}
-             {dbStatus.status === 'warning' && <AlertCircle size={16} />}
-             {dbStatus.status === 'error' && <XCircle size={16} />}
-             {dbStatus.status === 'checking' && <Database size={16} className="animate-pulse" />}
-             
-             <span>
-                {dbStatus.status === 'connected' ? 'System Online' : 
-                 dbStatus.status === 'checking' ? 'Connecting...' : 
-                 'Connection Issue'}
-             </span>
-          </button>
-      </div>
-
       {/* Hero Section */}
       <section className="relative pt-16 pb-32 lg:pt-24 lg:pb-40">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">

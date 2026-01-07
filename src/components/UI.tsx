@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, X } from 'lucide-react';
 
 // --- Buttons ---
 
@@ -102,5 +102,49 @@ export const Badge: React.FC<{ status: string; className?: string }> = ({ status
     <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${colors} ${className}`}>
       {status}
     </span>
+  );
+};
+// --- Modal ---
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  maxWidth?: string;
+}
+
+export const Modal: React.FC<ModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  title, 
+  children, 
+  maxWidth = 'max-w-md' 
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div 
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" 
+        onClick={onClose}
+      ></div>
+      <Card 
+        className={`relative w-full ${maxWidth} p-8 animate-in zoom-in-95 duration-200 shadow-2xl border-none`}
+      >
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-xl transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-slate-900">{title}</h3>
+        </div>
+
+        {children}
+      </Card>
+    </div>
   );
 };

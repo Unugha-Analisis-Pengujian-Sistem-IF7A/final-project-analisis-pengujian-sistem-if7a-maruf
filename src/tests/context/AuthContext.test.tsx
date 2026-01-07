@@ -1,7 +1,13 @@
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { supabase } from '@/services/supabaseClient';
+
+// Mock ToastContext
+const mockShowToast = vi.fn();
+vi.mock('@/context/ToastContext', () => ({
+    useToast: () => ({ showToast: mockShowToast }),
+}));
 
 // Mock Supabase Client
 vi.mock('@/services/supabaseClient', () => ({
@@ -37,11 +43,20 @@ const TestComponent = () => {
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock console to keep test output clean
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('renders loading state initially', () => {
-    // Mock pending session
+    // Mock pending session and NO state change (loading stays true)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.auth.getSession as any).mockReturnValue(new Promise(() => {})); 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.auth.onAuthStateChange as any).mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
 
     render(
@@ -57,24 +72,21 @@ describe('AuthContext', () => {
     const mockUser = { id: '123', email: 'test@example.com' };
     const mockSession = { user: mockUser };
     
-    // Mock getSession success
-    (supabase.auth.getSession as any).mockResolvedValue({ 
-      data: { session: mockSession }, 
-      error: null 
-    });
-
-    // Mock onAuthStateChange
-    (supabase.auth.onAuthStateChange as any).mockReturnValue({
-      data: { subscription: { unsubscribe: vi.fn() } },
-    });
-
     // Mock Profile Fetch
     const mockSelect = vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
         single: vi.fn().mockResolvedValue({ data: { role: 'organizer' }, error: null }),
       }),
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.from as any).mockReturnValue({ select: mockSelect });
+
+    // Mock onAuthStateChange to TRIGGER callback immediately
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.auth.onAuthStateChange as any).mockImplementation((callback: any) => {
+        callback('SIGNED_IN', mockSession);
+        return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
 
     render(
       <AuthProvider>
@@ -84,13 +96,14 @@ describe('AuthContext', () => {
 
     await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument());
     expect(screen.getByTestId('user')).toHaveTextContent('test@example.com');
-    // Note: Profile fetch is async inside useEffect, might need extra wait or check implementation
   });
 
   it('handles unauthenticated state', async () => {
-    (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
-    (supabase.auth.onAuthStateChange as any).mockReturnValue({
-      data: { subscription: { unsubscribe: vi.fn() } },
+    // Mock onAuthStateChange to TRIGGER callback with null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.auth.onAuthStateChange as any).mockImplementation((callback: any) => {
+        callback('SIGNED_OUT', null);
+        return { data: { subscription: { unsubscribe: vi.fn() } } };
     });
 
     render(
@@ -105,7 +118,16 @@ describe('AuthContext', () => {
 
   it('handles signOut error', async () => {
     const mockSignOut = vi.fn().mockResolvedValue({ error: { message: 'Sign out failed' } });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.auth.signOut as any) = mockSignOut;
+
+    // Use null session to be safe (already handled by default mocks if not specified?) 
+    // Need to init auth state so it renders children
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.auth.onAuthStateChange as any).mockImplementation((callback: any) => {
+        callback('SIGNED_OUT', null);
+        return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
     
     // Test component that calls signOut
     const TestSignOut = () => {
@@ -126,25 +148,25 @@ describe('AuthContext', () => {
          fireEvent.click(screen.getByText('Sign Out'));
     });
     
-    // Verify console.error was called? Or just that signOut was called.
     expect(mockSignOut).toHaveBeenCalled();
-    // Optional: Check if error handling logic in UI is triggered (e.g. toast or alert), but current UI might not show it.
   });
 
   it('refreshes profile data', async () => {
-      // Mock initial login
-      (supabase.auth.getSession as any).mockResolvedValue({
-          data: { session: { user: { id: '123' } } },
-          error: null
-      });
-
       // Mock user profile fetch for initial load
       const mockInitialProfile = vi.fn().mockResolvedValue({ data: { role: 'participant' }, error: null });
       
       const mockSelect = vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({ single: mockInitialProfile })
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase.from as any).mockReturnValue({ select: mockSelect });
+
+      // Init session
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.auth.onAuthStateChange as any).mockImplementation((callback: any) => {
+          callback('SIGNED_IN', { user: { id: '123' } });
+          return { data: { subscription: { unsubscribe: vi.fn() } } };
+      });
 
       const TestRefresh = () => {
           const { refreshProfile, role } = useAuth();
@@ -175,18 +197,21 @@ describe('AuthContext', () => {
   });
 
   it('sets participant role when profile fetch fails', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
-          data: { session: { user: { id: '123' } } },
-          error: null
-      });
-
       // Mock profile fetch ERROR
       const mockSelect = vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
               single: vi.fn().mockRejectedValue(new Error('DB Error')),
           }),
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase.from as any).mockReturnValue({ select: mockSelect });
+
+      // Init session
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.auth.onAuthStateChange as any).mockImplementation((callback: any) => {
+          callback('SIGNED_IN', { user: { id: '123' } });
+          return { data: { subscription: { unsubscribe: vi.fn() } } };
+      });
 
       render(
           <AuthProvider>
@@ -199,11 +224,14 @@ describe('AuthContext', () => {
   });
 
   it('updates state on auth state change', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let authCallback: any;
-    (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.auth.onAuthStateChange as any).mockImplementation((cb: any) => {
         authCallback = cb;
+        // Init as null
+        cb('SIGNED_OUT', null);
         return { data: { subscription: { unsubscribe: vi.fn() } } };
     });
 
@@ -226,6 +254,7 @@ describe('AuthContext', () => {
             single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null }),
         }),
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.from as any).mockReturnValue({ select: mockSelect });
 
     await act(async () => {
@@ -258,25 +287,4 @@ describe('AuthContext', () => {
     consoleSpy.mockRestore();
   });
 
-  it('handles auth initialization error', async () => {
-    (supabase.auth.getSession as any).mockResolvedValue({
-        data: { session: null },
-        error: { message: 'Initialization failed' }
-    });
-
-    const TestError = () => {
-        const { error, loading } = useAuth();
-        if (loading) return <div>Loading...</div>;
-        return <div>{error}</div>;
-    };
-
-    render(
-        <AuthProvider>
-            <TestError />
-        </AuthProvider>
-    );
-
-    await waitFor(() => expect(screen.queryByText('Loading...')).not.toBeInTheDocument());
-    expect(screen.getByText('Initialization failed')).toBeInTheDocument();
-  });
 });

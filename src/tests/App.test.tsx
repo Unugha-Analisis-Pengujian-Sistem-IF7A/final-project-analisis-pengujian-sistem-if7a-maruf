@@ -93,7 +93,7 @@ describe('App Integration', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        window.location.hash = '#/';
+        window.history.pushState(null, '', '/');
         
         // Setup Supabase Mock
         const mockChain = createChainableMock();
@@ -131,7 +131,7 @@ describe('App Integration', () => {
 
     it('renders login page on /login', async () => {
         setupAuth();
-        window.location.hash = '#/login';
+        window.history.pushState(null, '', '/login');
         await act(async () => {
             render(<App />);
         });
@@ -140,7 +140,7 @@ describe('App Integration', () => {
 
     it('renders discover page on /discover', async () => {
          setupAuth();
-         window.location.hash = '#/discover';
+         window.history.pushState(null, '', '/discover');
          await act(async () => {
              render(<App />);
          });
@@ -149,7 +149,7 @@ describe('App Integration', () => {
 
     it('renders dashboard page when logged in and navigating to /dashboard', async () => {
          setupAuth({ user: { id: '123', email: 'test@example.com' } });
-         window.location.hash = '#/dashboard';
+         window.history.pushState(null, '', '/dashboard');
 
          await act(async () => {
              render(<App />);
@@ -162,7 +162,7 @@ describe('App Integration', () => {
 
     it('switches to dashboard layout when logged in user visits public page (not landing)', async () => {
         setupAuth({ user: { id: '123', email: 'test@example.com' } });
-        window.location.hash = '#/discover';
+        window.history.pushState(null, '', '/discover');
 
         await act(async () => {
             render(<App />);
@@ -176,7 +176,7 @@ describe('App Integration', () => {
         setupAuth({ 
             user: { id: '123', email: 'user@test.com', user_metadata: { full_name: 'Test User' } } 
         });
-        window.location.hash = '#/dashboard';
+        window.history.pushState(null, '', '/dashboard');
 
         await act(async () => {
             render(<App />);
@@ -212,7 +212,7 @@ describe('App Integration', () => {
         mockLimit.mockResolvedValue({ data: mockNotifs, error: null });
 
         setupAuth({ user: { id: '123', email: 'user@test.com' } });
-        window.location.hash = '#/dashboard';
+        window.history.pushState(null, '', '/dashboard');
 
         await act(async () => {
              render(<App />);
@@ -281,7 +281,7 @@ describe('App Integration', () => {
         ];
         mockLimit.mockResolvedValue({ data: mockNotifs, error: null });
         setupAuth({ user: { id: '123' } });
-        window.location.hash = '#/dashboard';
+        window.history.pushState(null, '', '/dashboard');
         
         await act(async () => { render(<App />); });
         await act(async () => { fireEvent.click(screen.getByTestId('notif-btn')); });
@@ -290,13 +290,13 @@ describe('App Integration', () => {
         fireEvent.click(notifItem);
         
         await waitFor(() => {
-            expect(window.location.hash).toBe('#/discover');
+            expect(window.location.pathname).toBe('/discover');
         });
     });
 
     it('closes menus when clicking outside', async () => {
         setupAuth({ user: { id: '123', user_metadata: { full_name: 'Outside User' } } });
-        window.location.hash = '#/dashboard';
+        window.history.pushState(null, '', '/dashboard');
         await act(async () => { render(<App />); });
         
         // Open User Menu
@@ -334,7 +334,7 @@ describe('App Integration', () => {
         vi.stubGlobal('Notification', mockNotificationCtor);
         (mockNotificationCtor as any).permission = 'granted';
 
-        window.location.hash = '#/dashboard';
+        window.history.pushState(null, '', '/dashboard');
         await act(async () => { render(<App />); });
         
         // Wait for it to subscribe and set callback

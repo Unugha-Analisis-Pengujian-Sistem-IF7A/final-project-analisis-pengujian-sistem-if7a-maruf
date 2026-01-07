@@ -7,13 +7,21 @@ import { supabase } from '@/services/supabaseClient';
 // Helper for Supabase Multi-Chaining - Hoisted
 const { createMockQuery } = vi.hoisted(() => {
     return {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         createMockQuery: (data: any = [], error: any = null) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const query: any = {
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
                 ilike: vi.fn().mockReturnThis(),
                 order: vi.fn().mockReturnThis(),
                 single: vi.fn().mockReturnThis(),
+                range: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
+                in: vi.fn().mockReturnThis(),
+                gte: vi.fn().mockReturnThis(),
+                lte: vi.fn().mockReturnThis(),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 then: (onfulfilled?: (value: any) => any) => {
                      // Simulate async resolution
                      return Promise.resolve({ data, error }).then(onfulfilled);
@@ -33,6 +41,12 @@ vi.mock('@/services/supabaseClient', () => {
         getStorageUrl: vi.fn((path) => path ? `https://storage.com/${path}` : null),
     };
 });
+
+// Mock ToastContext
+const mockShowToast = vi.fn();
+vi.mock('@/context/ToastContext', () => ({
+    useToast: () => ({ showToast: mockShowToast }),
+}));
 
 // Mock AuthContext
 vi.mock('@/context/AuthContext', () => ({
@@ -58,6 +72,7 @@ describe('Discover Page', () => {
     });
 
     it('renders empty state when no events found', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockReturnValue(createMockQuery([], null) as any);
 
         await act(async () => {
@@ -84,6 +99,7 @@ describe('Discover Page', () => {
             }
         ];
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockReturnValue(createMockQuery(mockEvents, null) as any);
 
         await act(async () => {
@@ -101,6 +117,7 @@ describe('Discover Page', () => {
 
     it('filters events by category', async () => {
         const mockQuery = createMockQuery([]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockReturnValue(mockQuery as any);
 
         await act(async () => {
@@ -123,6 +140,7 @@ describe('Discover Page', () => {
 
     it('searches events by title', async () => {
         const mockQuery = createMockQuery([]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockReturnValue(mockQuery as any);
 
         await act(async () => {
@@ -153,6 +171,7 @@ describe('Discover Page', () => {
             }
         ];
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockReturnValue(createMockQuery(mockEvents, null) as any);
 
         await act(async () => {
@@ -175,6 +194,7 @@ describe('Discover Page', () => {
 
     it('syncs search state with URL query parameter', async () => {
         const mockQuery = createMockQuery([]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockReturnValue(mockQuery as any);
 
         await act(async () => {
@@ -191,6 +211,7 @@ describe('Discover Page', () => {
 
     it('closes event preview modal', async () => {
         const mockEvents = [{ id: '1', title: 'Close Me', date: '2025-05-20', location: 'Here', type: 'Seminar' }];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(supabase.from).mockReturnValue(createMockQuery(mockEvents) as any);
 
         render(<MemoryRouter><Discover /></MemoryRouter>);
