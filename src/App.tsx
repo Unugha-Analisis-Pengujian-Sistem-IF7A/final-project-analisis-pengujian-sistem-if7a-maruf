@@ -15,6 +15,10 @@ import {
   Info,
   CheckCircle2,
   AlertTriangle,
+  Globe,
+  LayoutDashboard,
+  Calendar,
+  Users
 } from 'lucide-react';
 import { Button } from './components/UI';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -164,6 +168,7 @@ export const DashboardNavbar = () => {
   const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   
@@ -305,8 +310,8 @@ export const DashboardNavbar = () => {
 
   return (
     <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-18 py-3">
+      <div className="max-w-7xl mx-auto px-2 md:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 md:h-18 py-2 md:py-3">
           
           {/* Left: Logo & Nav */}
           <div className="flex items-center gap-8">
@@ -315,6 +320,16 @@ export const DashboardNavbar = () => {
                 U
               </div>
             </Link>
+
+            {/* Mobile Search Toggle (Optional/Future) or just direct search below */}
+            <div className="md:hidden flex items-center">
+                 <button 
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                </button>
+            </div>
 
             <div className="hidden md:flex items-center bg-slate-100/50 p-1 rounded-full border border-slate-200/50">
               <Link to="/dashboard">
@@ -363,7 +378,7 @@ export const DashboardNavbar = () => {
           </div>
 
           {/* Right: User & Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             
             {/* Show Create Button ONLY if ADMIN */}
             {role === 'admin' && (
@@ -389,7 +404,7 @@ export const DashboardNavbar = () => {
                 </button>
 
                 {isNotifOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute top-full right-0 mt-2 w-[calc(100vw-32px)] sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2">
                         <div className="px-4 py-3 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                             <h3 className="text-sm font-bold text-slate-800">Notifikasi</h3>
                             {unreadCount > 0 && (
@@ -498,6 +513,52 @@ export const DashboardNavbar = () => {
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+            <div className="md:hidden py-4 border-t border-slate-100 bg-white animate-in slide-in-from-top-2">
+                <div className="space-y-4 px-2">
+                    {/* Mobile Search */}
+                    <div className="relative px-2">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input 
+                            type="text" 
+                            placeholder="Cari event..." 
+                            className="w-full bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 rounded-xl pl-10 pr-4 py-2 text-sm transition-all outline-none border"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyDown={(e) => {
+                                handleSearch(e);
+                                if (e.key === 'Enter') setIsMobileMenuOpen(false);
+                            }}
+                        />
+                    </div>
+
+                    {/* Mobile Links */}
+                    <div className="grid grid-cols-1 gap-1 px-2">
+                        <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 ${isActive('/dashboard') ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <LayoutDashboard size={18} /> Dashboard
+                        </Link>
+                        <Link to="/calendar" onClick={() => setIsMobileMenuOpen(false)} className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 ${isActive('/calendar') ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <Calendar size={18} /> Kalender
+                        </Link>
+                        <Link to="/discover" onClick={() => setIsMobileMenuOpen(false)} className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 ${isActive('/discover') ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
+                            <Globe size={18} /> Explore
+                        </Link>
+                        {role === 'admin' && (
+                            <Link to="/users" onClick={() => setIsMobileMenuOpen(false)} className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 ${isActive('/users') ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                <Users size={18} /> Manajemen User
+                            </Link>
+                        )}
+                        {role === 'admin' && (
+                            <Link to="/create-event" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-3 text-indigo-600 bg-indigo-50/50">
+                                <Plus size={18} /> Buat Event Baru
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
       </div>
     </nav>
   );

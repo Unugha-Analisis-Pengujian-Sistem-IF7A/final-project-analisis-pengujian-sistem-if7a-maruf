@@ -113,7 +113,7 @@ export const AdminDashboard: React.FC = () => {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700 px-4 md:px-0">
             {/* Header Section with Glass Card */}
             <div className="relative overflow-hidden bg-slate-900 rounded-[40px] p-8 md:p-12 shadow-2xl shadow-indigo-500/10 border border-slate-800">
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-600/10 to-transparent pointer-events-none"></div>

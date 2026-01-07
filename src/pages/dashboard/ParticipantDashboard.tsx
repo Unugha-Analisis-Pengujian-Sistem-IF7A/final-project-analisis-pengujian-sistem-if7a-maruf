@@ -109,7 +109,7 @@ const ParticipantDashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-10 pb-20 max-w-5xl mx-auto">
+        <div className="space-y-6 md:space-y-10 pb-20 max-w-5xl mx-auto px-4 md:px-0">
             {/* Modal - Sesuaikan dengan props EventPreviewModal yang benar */}
             <EventPreviewModal 
                 isOpen={!!selectedEvent} 
@@ -120,7 +120,7 @@ const ParticipantDashboard: React.FC = () => {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-5xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                         Acara
                         <span className="w-2 h-10 bg-indigo-600 rounded-full animate-pulse hidden md:block"></span>
                     </h1>
