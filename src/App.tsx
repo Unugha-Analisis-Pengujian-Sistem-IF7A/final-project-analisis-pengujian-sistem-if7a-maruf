@@ -528,7 +528,7 @@ const AppLayout = ({ type = 'public' }: { type?: 'public' | 'dashboard' | 'auth'
         <Outlet />
       </main>
 
-      {effectiveType === 'public' && (
+      {(effectiveType === 'public' || effectiveType === 'dashboard') && (
         <Footer />
       )}
     </div>
